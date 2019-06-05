@@ -80,6 +80,7 @@
 #include "bcnames.h"
 #include "jimagereader.h"
 #include "vendor_version.h"
+#include "jvmimage_api.h"
 
 #ifdef J9VM_OPT_ZIP_SUPPORT
 #include "zip_api.h"
@@ -2071,6 +2072,8 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 
 			if (NULL == (vm->jniWeakGlobalReferences = pool_new(sizeof(UDATA), 0, 0, POOL_NO_ZERO, J9_GET_CALLSITE(), J9MEM_CATEGORY_JNI, POOL_FOR_PORT(vm->portLibrary))))
 				goto _error;
+
+			allocateJVMImage(vm);
 
 			if (NULL == (vm->classLoadingStackPool = pool_new(sizeof(J9ClassLoadingStackElement),  0, 0, 0, J9_GET_CALLSITE(), J9MEM_CATEGORY_CLASSES, POOL_FOR_PORT(vm->portLibrary))))
 				goto _error;

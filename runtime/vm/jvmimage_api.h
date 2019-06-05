@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2019 IBM Corp. and others
+ * Copyright (c) 1991, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,50 +19,21 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-/*
-* JVMImage.hpp
-*/
 
-#ifndef JVMIMAGE_HPP_
-#define JVMIMAGE_HPP_
+#ifndef jvmimage_api_h
+#define jvmimage_api_h
 
 #include "j9.h"
 #include "j9comp.h"
-#include "j9protos.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class JVMImage
-{
-private:
-	JVMImage(J9JavaVM *vm);
-	~JVMImage();
+//void allocateJVMImage(J9JavaVM *vm);
 
-	bool initializeMonitor();
-public:
-	static JVMImage* createInstance(J9JavaVM *vm);
-	static JVMImage* getInstance();
+#ifdef __cplusplus
+}
+#endif
 
-	void allocateImageMemory();
-	void reallocateImageMemory(UDATA size);
-	void* subAllocateMemory(uintptr_t byteAmount);
-	void freeSubAllocatedMemory(void *memStart);
-
-	void readImageFromFile();
-	void storeImageInFile();
-
-	OMRPortLibrary* getPortLibrary() { return &_portLibrary; }
-private:
-	static JVMImage *_jvmInstance;
-
-	J9Heap *_heap;
-	UDATA _size;
-	bool _isImageAllocated;
-
-	OMRPortLibrary _portLibrary;
-	omrthread_monitor_t _jvmImageMonitor;
-
-	static const char *_dumpFileName;
-	static const UDATA _imageSize;
-};
-
-#endif /* JVMIMAGE_H_ */
+#endif
