@@ -137,7 +137,7 @@ JVMImage::readImageFromFile()
     char imageBuffer[JVMImage::INITIAL_IMAGE_SIZE];
     memset(imageBuffer, 0, sizeof(imageBuffer));
 
-    intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0666);
+    intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
     if (fileDescriptor == -1) {
         // Failure to open file
     }
@@ -151,7 +151,7 @@ JVMImage::readImageFromFile()
         // Failure to close
     }
 
-    // Finally load the JVMImage using the data we read from the image
+    // TODO: Finally load the JVMImage using the data we read from the image
 }
 
 void
