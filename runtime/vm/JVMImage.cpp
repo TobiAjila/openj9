@@ -31,7 +31,7 @@ JVMImage::JVMImage(J9JavaVM *javaVM) :
     _heap(NULL),
 	_currentImageSize(0),
 	_isImageAllocated(false),
-	_dumpFileName("jvm_image.data")
+	_dumpFileName(NULL)
 {
 	OMRPORT_ACCESS_FROM_J9PORT(javaVM->portLibrary);
 	memset(&_portLibrary, 0, sizeof(OMRPortLibrary));
@@ -159,7 +159,7 @@ JVMImage::storeImageInFile()
 {
     OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
-	if (_isImageAllocated == NULL) {
+	if (!_isImageAllocated) {
 		// Nothing to dump
 	}
 
@@ -180,8 +180,8 @@ JVMImage::storeImageInFile()
 extern "C" void
 create_and_allocate_jvm_image(J9JavaVM *vm)
 {
-    JVMImage *jvmImage = JVMImage::createInstance(vm, JVMImage::INITIAL_IMAGE_SIZE);
-    jvmImage->allocateImageMemory(vm);
+    JVMImage *jvmImage = JVMImage::createInstance(vm);
+    jvmImage->allocateImageMemory(vm, JVMImage::INITIAL_IMAGE_SIZE);
 }
 
 extern "C" void *
