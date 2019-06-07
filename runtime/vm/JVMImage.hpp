@@ -42,7 +42,7 @@ public:
 	static JVMImage* createInstance(J9JavaVM *vm);
 	static JVMImage* getInstance();
 
-	void allocateImageMemory(J9JavaVM *vm);
+	void allocateImageMemory(J9JavaVM *vm, UDATA size);
 	void reallocateImageMemory(UDATA size);
 	void* subAllocateMemory(uintptr_t byteAmount);
 	void freeSubAllocatedMemory(void *memStart);
@@ -51,18 +51,19 @@ public:
 	void storeImageInFile();
 
 	OMRPortLibrary* getPortLibrary() { return &_portLibrary; }
+public:
+	static const UDATA INITIAL_IMAGE_SIZE;
 private:
 	static JVMImage *_jvmInstance;
 
 	J9Heap *_heap;
-	UDATA _size;
+	UDATA _currentImageSize;
 	bool _isImageAllocated;
 
 	OMRPortLibrary _portLibrary;
 	omrthread_monitor_t _jvmImageMonitor;
 
-	static const char *_dumpFileName;
-	static const UDATA _initialImageSize;
+	char *_dumpFileName;
 };
 
 #endif /* JVMIMAGE_H_ */
