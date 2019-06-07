@@ -26,7 +26,7 @@
 
 JVMImage *JVMImage::_jvmInstance = NULL;
 const char *JVMImage::_dumpFileName = "jvm_image.data";
-const UDATA JVMImage::_imageSize = 1024;
+const UDATA JVMImage::_initialImageSize = 1024;
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
     _heap(NULL),
@@ -58,8 +58,9 @@ JVMImage::initializeMonitor()
 JVMImage *
 JVMImage::createInstance(J9JavaVM *vm)
 {
-    if (_jvmInstance != NULL)
+    if (_jvmInstance != NULL) {
         _jvmInstance = new JVMImage(vm);
+    }
 
     return _jvmInstance;
 }
@@ -75,20 +76,22 @@ JVMImage::allocateImageMemory(J9JavaVM *vm)
 {
     PORT_ACCESS_FROM_JAVAVM(vm);
     
-    J9Heap *allocPtr = (J9Heap*)j9mem_allocate_memory(_imageSize, J9MEM_CATEGORY_CLASSES);
+    J9Heap *allocPtr = (J9Heap*)j9mem_allocate_memory(_initialImageSize, J9MEM_CATEGORY_CLASSES);
     if (allocPtr == NULL) {
         // Memory allocation failed
         return;
     }
-
-    _size = _imageSize;
-    _isImageAllocated = true;
 
     _heap = j9heap_create(allocPtr, _size, 0);
     if (_heap == NULL) {
         // Heap creation failed
         return;
     }
+
+    _size = _initialImageSize;
+    _isImageAllocated = true;
+    initializeMonitor();
+    j9mem_free_memory((void *) allocPtr);
 }
 
 void
@@ -129,7 +132,7 @@ JVMImage::readImageFromFile()
 {
     OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
-    char imageBuffer[_imageSize];
+    char imageBuffer[_initialImageSize];
     memset(imageBuffer, 0, sizeof(imageBuffer));
 
     intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0666);

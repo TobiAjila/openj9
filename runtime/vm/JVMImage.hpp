@@ -62,7 +62,7 @@ private:
 	omrthread_monitor_t _jvmImageMonitor;
 
 	static const char *_dumpFileName;
-	static const UDATA _imageSize;
+	static const UDATA _initialImageSize;
 };
 
 #endif /* JVMIMAGE_H_ */

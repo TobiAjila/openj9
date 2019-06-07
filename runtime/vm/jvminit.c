@@ -80,7 +80,6 @@
 #include "bcnames.h"
 #include "jimagereader.h"
 #include "vendor_version.h"
-#include "jvmimage_api.h"
 
 #ifdef J9VM_OPT_ZIP_SUPPORT
 #include "zip_api.h"
