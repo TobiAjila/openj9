@@ -42,7 +42,7 @@ public:
 	static JVMImage* createInstance(J9JavaVM *vm);
 	static JVMImage* getInstance();
 
-	void allocateImageMemory();
+	void allocateImageMemory(J9JavaVM *vm);
 	void reallocateImageMemory(UDATA size);
 	void* subAllocateMemory(uintptr_t byteAmount);
 	void freeSubAllocatedMemory(void *memStart);

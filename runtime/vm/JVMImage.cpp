@@ -24,11 +24,11 @@
 
 #define OMRPORT_FROM_IMAGE JVMImage::getInstance()->getPortLibrary();
 
+JVMImage *JVMImage::_jvmInstance = NULL;
 const char *JVMImage::_dumpFileName = "jvm_image.data";
 const UDATA JVMImage::_imageSize = 1024;
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
-    _jvmInstance(NULL),
     _heap(NULL),
 	_size(0),
 	_isImageAllocated(false)
@@ -56,7 +56,7 @@ JVMImage::initializeMonitor()
 }
 
 JVMImage *
-createInstance(J9JavaVM *vm)
+JVMImage::createInstance(J9JavaVM *vm)
 {
     if (_jvmInstance != NULL)
         _jvmInstance = new JVMImage(vm);
@@ -67,14 +67,13 @@ createInstance(J9JavaVM *vm)
 JVMImage *
 JVMImage::getInstance()
 {
-    static JVMImage image(vm);
-    return &image;
+    return _jvmInstance;
 }
 
 void
-JVMImage::allocateImageMemory()
+JVMImage::allocateImageMemory(J9JavaVM *vm)
 {
-    PORT_ACCESS_FROM_PORT(_portLibrary);
+    PORT_ACCESS_FROM_JAVAVM(vm);
     
     J9Heap *allocPtr = (J9Heap*)j9mem_allocate_memory(_imageSize, J9MEM_CATEGORY_CLASSES);
     if (allocPtr == NULL) {
@@ -83,10 +82,10 @@ JVMImage::allocateImageMemory()
     }
 
     _size = _imageSize;
-    _isAllocated = true;
+    _isImageAllocated = true;
 
-    _heapBase = j9heap_create(allocPtr, _size, 0);
-    if (_heapBase == NULL) {
+    _heap = j9heap_create(allocPtr, _size, 0);
+    if (_heap == NULL) {
         // Heap creation failed
         return;
     }
@@ -128,7 +127,7 @@ JVMImage::freeSubAllocatedMemory(void* address)
 void
 JVMImage::readImageFromFile()
 {
-    OMRPORT_ACCESS_FROM_J9PORT(_portLibrary);
+    OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
     char imageBuffer[_imageSize];
     memset(imageBuffer, 0, sizeof(imageBuffer));
@@ -153,14 +152,14 @@ JVMImage::readImageFromFile()
 void
 JVMImage::storeImageInFile()
 {
-    OMRPORT_ACCESS_FROM_J9PORT(_portLibrary);
+    OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
     intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenWrite | EsOpenTruncate, 0666);
     if (fileDescriptor == -1) {
         // Failure to open file
     }
 
-    if (omrfile_write(fileDescriptor, (void*)_heapBase, _size) != (intptr_t)_size) {
+    if (omrfile_write(fileDescriptor, (void*)_heap, _size) != (intptr_t)_size) {
         // Failure to write to the file
     }
 
@@ -173,7 +172,7 @@ extern "C" void
 create_and_allocate_jvm_image(J9JavaVM *vm)
 {
     JVMImage *jvmImage = JVMImage::createInstance(vm);
-    jvmImage->allocateImageMemory();
+    jvmImage->allocateImageMemory(vm);
 }
 
 extern "C" void *
