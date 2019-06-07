@@ -85,13 +85,14 @@ JVMImage::allocateImageMemory(J9JavaVM *vm)
     _heap = j9heap_create(allocPtr, _size, 0);
     if (_heap == NULL) {
         // Heap creation failed
+        j9mem_free_memory((void *) allocPtr);
         return;
     }
 
     _size = _initialImageSize;
     _isImageAllocated = true;
     initializeMonitor();
-    j9mem_free_memory((void *) allocPtr);
+    
 }
 
 void
