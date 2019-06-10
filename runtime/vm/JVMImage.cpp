@@ -108,7 +108,7 @@ JVMImage::subAllocateMemory(uintptr_t byteAmount)
 {
 	omrthread_monitor_enter(_jvmImageMonitor);
 
-	void* memStart = _portLibrary->heap_allocate(_portLibrary, _heap, byteAmount);	
+	void *memStart = _portLibrary->heap_allocate(_portLibrary, _heap, byteAmount);	
 	// image memory is not large enough and needs to be reallocated
 	if (memStart == NULL) {
 		reallocateImageMemory(_currentImageSize * 2 + byteAmount);
