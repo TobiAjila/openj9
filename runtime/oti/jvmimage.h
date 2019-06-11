@@ -23,6 +23,8 @@
 #ifndef jvmimage_h
 #define jvmimage_h
 
+#define ALIGNMENT_ROUND_UP(value) ((((uintptr_t) value) + (sizeof(uint64_t) - 1)) & (~(sizeof(uint64_t) - 1)))
+#define HEAP_MANAGEMENT_OVERHEAD (4*sizeof(UDATA) + 2*sizeof(U_64))
 #define OMRPORT_FROM_IMAGE JVMImage::getInstance()->getPortLibrary();
 
 #endif

@@ -30,6 +30,14 @@
 #include "j9comp.h"
 #include "j9protos.h"
 
+#include <sys/mman.h>
+
+
+struct JVMImageHeader
+{
+	UDATA imageSize;
+	uintptr_t heapAddress;
+};
 
 class JVMImage
 {
@@ -37,7 +45,7 @@ public:
 	JVMImage(J9JavaVM *vm);
 	~JVMImage();
 
-	static JVMImage* createInstance(J9JavaVM *vm);
+	static JVMImage* createInstance(J9JavaVM *javaVM);
 	static JVMImage* getInstance();
 
 	void* allocateImageMemory(UDATA size);
@@ -46,20 +54,19 @@ public:
 	void freeSubAllocatedMemory(void *memStart);
 
 	bool readImageFromFile();
-	void storeImageInFile();
+	bool storeImageInFile();
 
 	bool initializeMonitor();
 	void destroyMonitor();
 
 	OMRPortLibrary* getPortLibrary() { return _portLibrary; }
 	bool isWarmRun() { return _isWarmRun; }
-public:
-	static const UDATA INITIAL_IMAGE_SIZE;
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
+public:
+	static const UDATA INITIAL_IMAGE_SIZE;
 private:
 	static JVMImage *_jvmInstance;
-
 	J9JavaVM* _vm;
 
 	void* _heapBase;

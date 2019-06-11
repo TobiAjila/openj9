@@ -28,9 +28,10 @@ const UDATA JVMImage::INITIAL_IMAGE_SIZE = 1024;
 JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_vm(javaVM),
 	_heapBase(NULL),
-    _heap(NULL),
+	_heap(NULL),
 	_currentImageSize(0),
-	_isImageAllocated(false)
+	_isImageAllocated(false),
+	_dumpFileName(NULL)
 {
 	PORT_ACCESS_FROM_JAVAVM(javaVM);
 	_portLibrary = (OMRPortLibrary *) j9mem_allocate_memory(sizeof(OMRPortLibrary), OMRMEM_CATEGORY_PORT_LIBRARY);
@@ -93,6 +94,9 @@ JVMImage::allocateImageMemory(UDATA size)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
+	// Make sure the size is 8 byte aligned, cause that is a requirement for the omr heap (round up)
+	size = ALIGNMENT_ROUND_UP(size);
+
 	_heapBase = j9mem_allocate_memory(size, J9MEM_CATEGORY_CLASSES);
 	if (_heapBase == NULL) {
 		return NULL;
@@ -147,58 +151,72 @@ JVMImage::readImageFromFile()
 {
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
-	// TODO: The size will need to be very large or dynamically based on whatever is written to the dump
-	// TODO: Fetch the initial size of the jvm image
-    char imageBuffer[JVMImage::INITIAL_IMAGE_SIZE];
-    memset(imageBuffer, 0, sizeof(imageBuffer));
+	omrthread_monitor_enter(_jvmImageMonitor);
 
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
 	if (fileDescriptor == -1) {
 		return false;
 	}
 
-	intptr_t bytesRead = omrfile_read(fileDescriptor, imageBuffer, sizeof(imageBuffer));
+	// Read image header then mmap the rest of the image (heap) into memory
+	JVMImageHeader imageHeader;
+	intptr_t bytesRead = omrfile_read(fileDescriptor, &imageHeader, sizeof(JVMImageHeader));
 	if (bytesRead == -1) {
+	omrfile_read(fileDescriptor, &imageHeader, sizeof(JVMImageHeader));
+	uint64_t fileSize = omrfile_flength(fileDescriptor);
+	if (fileSize != sizeof(JVMImageHeader) + imageHeader.imageSize) {
 		return false;
 	}
 
-	if (omrfile_close(fileDescriptor) != 0) {
-		return false;
-	}
+	// Mmap our file into virtual memory
+	void *block = mmap((void*)imageHeader.heapAddress, sizeof(JVMImageHeader) + imageHeader.imageSize, PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
+	_heap = (J9Heap*)((char*)block + sizeof(JVMImageHeader));
 
-	// TODO: Finally load the JVMImage using the data we read from the image
+	omrfile_close(fileDescriptor);
 
+	omrthread_monitor_exit(_jvmImageMonitor);
+	
 	return true;
 }
 
-void
+bool
 JVMImage::storeImageInFile()
 {
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
+	omrthread_monitor_enter(_jvmImageMonitor);
+
 	if (!_isImageAllocated) {
-		// Nothing to dump
+		return false;
 	}
 
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenWrite | EsOpenTruncate, 0666);
 	if (fileDescriptor == -1) {
-		// Failure to open file
+		return false;
 	}
 
+	// Write header followed by the heap
+	JVMImageHeader imageHeader;
+	imageHeader.imageSize = _currentImageSize;
+	imageHeader.heapAddress = (uintptr_t)_heap;
+	
+	omrfile_write(fileDescriptor, (void*)&imageHeader, sizeof(JVMImageHeader));
 	if (omrfile_write(fileDescriptor, (void*)_heap, _currentImageSize) != (intptr_t)_currentImageSize) {
-		// Failure to write to the file
+		return false;
 	}
 
-	if (omrfile_close(fileDescriptor) != 0) {
-		// Failure to close
-	}
+	omrfile_close(fileDescriptor);
+
+	omrthread_monitor_exit(_jvmImageMonitor);
+
+	return true;
 }
 
 extern "C" UDATA
 initializeJVMImage(J9JavaVM *vm)
 {
-    JVMImage *jvmImage = JVMImage::createInstance(vm);
-	
+	JVMImage *jvmImage = JVMImage::createInstance(vm);
+
 	if (jvmImage->isWarmRun()
 		&& jvmImage->allocateImageMemory(JVMImage::INITIAL_IMAGE_SIZE) == NULL
 		&& jvmImage->readImageFromFile() == 0) {
