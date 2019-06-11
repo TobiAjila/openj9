@@ -216,3 +216,67 @@ mem_free_memory(void *memoryPointer)
     JVMImage *jvmImage = JVMImage::getInstance();
     image_mem_free_memory(jvmImage->getPortLibrary(), memoryPointer);
 }
+
+extern "C" UDATA
+addClassPathEntries(J9JavaVM *vm, const char *filename)
+{
+	J9ClassLoader *classLoader = vm->systemClassLoader;
+	UDATA newCount = 0;
+	U_32 entryIndex = 0;
+	J9ClassPathEntry *newEntries = NULL;
+
+	UDATA jarPathSize = strlen(filename);
+	J9ClassPathEntry *oldEntries = classLoader->classPathEntries;
+	UDATA entryCount = classLoader->classPathEntryCount;
+    
+	UDATA classPathLength = jarPathSize + 1; /* add space for a terminating null character */
+	for (entryIndex = 0; entryIndex < entryCount; ++entryIndex) {
+		classPathLength += oldEntries[entryIndex].pathLength + 1;	/* add 1 for a null character */
+	}
+
+	newEntries = (J9ClassPathEntry*) mem_allocate_memory(sizeof(J9ClassPathEntry) * (entryCount + 1) + classPathLength);
+	if (NULL != newEntries) {
+		J9ClassPathEntry *cpEntry = &newEntries[entryCount];
+		U_8 *stringCursor = (U_8 *)(cpEntry + 1);
+		memcpy(newEntries, oldEntries, sizeof(J9ClassPathEntry) * entryCount);
+		/* copy the old entries */
+		for (entryIndex = 0; entryIndex < entryCount; ++entryIndex) {
+			memcpy(stringCursor, newEntries[entryIndex].path, newEntries[entryIndex].pathLength);
+			newEntries[entryIndex].path = stringCursor;
+			newEntries[entryIndex].path[newEntries[entryIndex].pathLength] = 0;	/* null character terminated */
+			stringCursor += newEntries[entryIndex].pathLength + 1;
+		}
+		/* Create the new entry */
+		memcpy(stringCursor, filename, jarPathSize);
+		cpEntry->pathLength = (U_32) jarPathSize;
+		cpEntry->path = stringCursor;
+		cpEntry->path[cpEntry->pathLength] = 0;	/* null character terminated */
+		cpEntry->extraInfo = NULL;
+		cpEntry->type = CPE_TYPE_UNKNOWN;
+		cpEntry->flags = CPE_FLAG_BOOTSTRAP;
+
+#if defined(J9VM_OPT_SHARED_CLASSES)
+		if (J9_ARE_ALL_BITS_SET(classLoader->flags, J9CLASSLOADER_SHARED_CLASSES_ENABLED)) {
+			/* 
+			 * Warm up the classpath entry so that the Classpath stored in the cache has the correct info.
+			 * This is required because when we are finding classes in the cache, initializeClassPathEntry is not called 
+			 * */
+			if (vm->internalVMFunctions->initializeClassPathEntry(vm, cpEntry) != CPE_TYPE_JAR) {
+				goto done;
+			}
+		}
+#endif
+		/* Everything OK, install the new array and discard the old one */
+		TRIGGER_J9HOOK_VM_CLASS_LOADER_CLASSPATH_ENTRY_ADDED(vm->hookInterface, vm, classLoader, cpEntry);
+		newCount = entryCount + 1;
+		classLoader->classPathEntries = newEntries;
+		classLoader->classPathEntryCount = newCount;
+		mem_free_memory(oldEntries);
+	}
+done:
+	/* If any error occurred, discard any allocated memory and throw OutOfMemoryError */
+	if (0 == newCount) {
+		mem_free_memory(newEntries);
+	}
+	return newCount;
+}
