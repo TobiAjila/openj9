@@ -160,8 +160,6 @@ JVMImage::readImageFromFile()
 
 	// Read image header then mmap the rest of the image (heap) into memory
 	JVMImageHeader imageHeader;
-	intptr_t bytesRead = omrfile_read(fileDescriptor, &imageHeader, sizeof(JVMImageHeader));
-	if (bytesRead == -1) {
 	omrfile_read(fileDescriptor, &imageHeader, sizeof(JVMImageHeader));
 	uint64_t fileSize = omrfile_flength(fileDescriptor);
 	if (fileSize != sizeof(JVMImageHeader) + imageHeader.imageSize) {
@@ -175,7 +173,7 @@ JVMImage::readImageFromFile()
 	omrfile_close(fileDescriptor);
 
 	omrthread_monitor_exit(_jvmImageMonitor);
-	
+
 	return true;
 }
 
@@ -200,8 +198,8 @@ JVMImage::storeImageInFile()
 	imageHeader.imageSize = _currentImageSize;
 	imageHeader.heapAddress = (uintptr_t)_heap;
 	
-	omrfile_write(fileDescriptor, (void*)&imageHeader, sizeof(JVMImageHeader));
-	if (omrfile_write(fileDescriptor, (void*)_heap, _currentImageSize) != (intptr_t)_currentImageSize) {
+	if (omrfile_write(fileDescriptor, (void*)&imageHeader, sizeof(JVMImageHeader)) != sizeof(JVMImageHeader)
+		|| omrfile_write(fileDescriptor, (void*)_heap, _currentImageSize) != (intptr_t)_currentImageSize) {
 		return false;
 	}
 
