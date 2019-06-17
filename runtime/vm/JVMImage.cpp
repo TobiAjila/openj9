@@ -146,6 +146,8 @@ JVMImage::freeSubAllocatedMemory(void* address)
 bool
 JVMImage::readImageFromFile()
 {
+	Trc_VM_ReadImageFromFile_Entry(_dumpFileName);
+
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
@@ -167,12 +169,16 @@ JVMImage::readImageFromFile()
 
 	omrfile_close(fileDescriptor);
 
+	Trc_VM_ReadImageFromFile_Exit();
+
 	return true;
 }
 
 bool
-JVMImage::storeImageInFile()
+JVMImage::writeImageToFile()
 {
+	Trc_VM_WriteImageToFile_Entry(_dumpFileName);
+
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
 	omrthread_monitor_enter(_jvmImageMonitor);
@@ -195,6 +201,8 @@ JVMImage::storeImageInFile()
 	omrfile_close(fileDescriptor);
 
 	omrthread_monitor_exit(_jvmImageMonitor);
+
+	Trc_VM_WriteImageToFile_Exit();
 
 	return true;
 }

@@ -29,6 +29,7 @@
 #include "j9.h"
 #include "j9comp.h"
 #include "j9protos.h"
+#include "ut_j9vm.h"
 
 #include <sys/mman.h>
 
@@ -48,7 +49,7 @@ public:
 	void freeSubAllocatedMemory(void *memStart);
 
 	bool readImageFromFile();
-	bool storeImageInFile();
+	bool writeImageToFile();
 
 	bool initializeMonitor();
 	void destroyMonitor();
