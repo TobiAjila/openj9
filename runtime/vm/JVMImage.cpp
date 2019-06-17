@@ -146,7 +146,7 @@ JVMImage::freeSubAllocatedMemory(void* address)
 bool
 JVMImage::readImageFromFile()
 {
-	Trc_VM_ReadImageFromFile_Entry(_dumpFileName);
+	Trc_VM_ReadImageFromFile_Entry(_heap, _dumpFileName);
 
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
@@ -177,7 +177,7 @@ JVMImage::readImageFromFile()
 bool
 JVMImage::writeImageToFile()
 {
-	Trc_VM_WriteImageToFile_Entry(_dumpFileName);
+	Trc_VM_WriteImageToFile_Entry(_heap, _dumpFileName);
 
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 

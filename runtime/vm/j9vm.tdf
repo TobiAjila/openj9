@@ -780,7 +780,7 @@ TraceException=Trc_VM_CreateRAMClassFromROMClass_nestedValueClassNotVisible Over
 
 TraceEvent=Trc_VM_CreateRAMClassFromROMClass_valueTypeIsFlattened Overhead=1 Level=7 Template="ValueType is eligible for flattening name=%.*s j9class=%p"
 
-TraceEntry=Trc_VM_ReadImageFromFile_Entry NoEnv Overhead=1 Level=1 Template="File being read = %s"
+TraceEntry=Trc_VM_ReadImageFromFile_Entry NoEnv Overhead=1 Level=1 Template="Heap = %p. File being read = %s"
 TraceExit=Trc_VM_ReadImageFromFile_Exit NoEnv Overhead=1 Level=1 Template="JVMImage Read Successful"
-TraceEntry=Trc_VM_WriteImageToFile_Entry NoEnv Overhead=1 Level=1 Template="File being written to = %s"
+TraceEntry=Trc_VM_WriteImageToFile_Entry NoEnv Overhead=1 Level=1 Template="Heap = %p. File being written to = %s"
 TraceExit=Trc_VM_WriteImageToFile_Exit NoEnv Overhead=1 Level=1 Template="JVMImage Write Successful"
