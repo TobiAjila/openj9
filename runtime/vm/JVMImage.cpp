@@ -229,9 +229,9 @@ addClassPathEntries(J9JavaVM *vm, const char *filename)
 	J9ClassPathEntry *oldEntries = classLoader->classPathEntries;
 	UDATA entryCount = classLoader->classPathEntryCount;
     
-	UDATA classPathLength = jarPathSize + 1; /* add space for a terminating null character */
+	UDATA classPathLength = jarPathSize + 1;
 	for (entryIndex = 0; entryIndex < entryCount; ++entryIndex) {
-		classPathLength += oldEntries[entryIndex].pathLength + 1;	/* add 1 for a null character */
+		classPathLength += oldEntries[entryIndex].pathLength + 1;
 	}
 
 	newEntries = (J9ClassPathEntry*) mem_allocate_memory(sizeof(J9ClassPathEntry) * (entryCount + 1) + classPathLength);
@@ -243,29 +243,18 @@ addClassPathEntries(J9JavaVM *vm, const char *filename)
 		for (entryIndex = 0; entryIndex < entryCount; ++entryIndex) {
 			memcpy(stringCursor, newEntries[entryIndex].path, newEntries[entryIndex].pathLength);
 			newEntries[entryIndex].path = stringCursor;
-			newEntries[entryIndex].path[newEntries[entryIndex].pathLength] = 0;	/* null character terminated */
+			newEntries[entryIndex].path[newEntries[entryIndex].pathLength] = 0;
 			stringCursor += newEntries[entryIndex].pathLength + 1;
 		}
 		/* Create the new entry */
 		memcpy(stringCursor, filename, jarPathSize);
 		cpEntry->pathLength = (U_32) jarPathSize;
 		cpEntry->path = stringCursor;
-		cpEntry->path[cpEntry->pathLength] = 0;	/* null character terminated */
+		cpEntry->path[cpEntry->pathLength] = 0;
 		cpEntry->extraInfo = NULL;
 		cpEntry->type = CPE_TYPE_UNKNOWN;
 		cpEntry->flags = CPE_FLAG_BOOTSTRAP;
 
-#if defined(J9VM_OPT_SHARED_CLASSES)
-		if (J9_ARE_ALL_BITS_SET(classLoader->flags, J9CLASSLOADER_SHARED_CLASSES_ENABLED)) {
-			/* 
-			 * Warm up the classpath entry so that the Classpath stored in the cache has the correct info.
-			 * This is required because when we are finding classes in the cache, initializeClassPathEntry is not called 
-			 * */
-			if (vm->internalVMFunctions->initializeClassPathEntry(vm, cpEntry) != CPE_TYPE_JAR) {
-				goto done;
-			}
-		}
-#endif
 		/* Everything OK, install the new array and discard the old one */
 		TRIGGER_J9HOOK_VM_CLASS_LOADER_CLASSPATH_ENTRY_ADDED(vm->hookInterface, vm, classLoader, cpEntry);
 		newCount = entryCount + 1;
@@ -273,8 +262,7 @@ addClassPathEntries(J9JavaVM *vm, const char *filename)
 		classLoader->classPathEntryCount = newCount;
 		mem_free_memory(oldEntries);
 	}
-done:
-	/* If any error occurred, discard any allocated memory and throw OutOfMemoryError */
+
 	if (0 == newCount) {
 		mem_free_memory(newEntries);
 	}
