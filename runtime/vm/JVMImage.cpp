@@ -23,7 +23,7 @@
 #include "JVMImage.hpp"
 
 JVMImage *JVMImage::_jvmInstance = NULL;
-const UDATA JVMImage::INITIAL_IMAGE_SIZE = 1024;
+const UDATA JVMImage::INITIAL_IMAGE_SIZE = 1024; // Should be 8 byte aligned
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_vm(javaVM),
@@ -94,9 +94,6 @@ JVMImage::allocateImageMemory(UDATA size)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	// Make sure the size is 8 byte aligned, cause that is a requirement for the omr heap (round up)
-	size = ALIGNMENT_ROUND_UP(size);
-
 	_heapBase = j9mem_allocate_memory(size, J9MEM_CATEGORY_CLASSES);
 	if (_heapBase == NULL) {
 		return NULL;
@@ -151,8 +148,6 @@ JVMImage::readImageFromFile()
 {
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
-	omrthread_monitor_enter(_jvmImageMonitor);
-
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
 	if (fileDescriptor == -1) {
 		return false;
@@ -167,12 +162,10 @@ JVMImage::readImageFromFile()
 	}
 
 	// Mmap our file into virtual memory
-	void *block = mmap((void*)imageHeader.heapAddress, sizeof(JVMImageHeader) + imageHeader.imageSize, PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
-	_heap = (J9Heap*)((char*)block + sizeof(JVMImageHeader));
+	JVMImageHeader *block = (JVMImageHeader*)mmap((void*)imageHeader.heapAddress, sizeof(JVMImageHeader) + imageHeader.imageSize, PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
+	_heap = (J9Heap*)(block + 1);
 
 	omrfile_close(fileDescriptor);
-
-	omrthread_monitor_exit(_jvmImageMonitor);
 
 	return true;
 }
@@ -183,10 +176,6 @@ JVMImage::storeImageInFile()
 	OMRPORT_ACCESS_FROM_OMRPORT(getPortLibrary());
 
 	omrthread_monitor_enter(_jvmImageMonitor);
-
-	if (!_isImageAllocated) {
-		return false;
-	}
 
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenWrite | EsOpenTruncate, 0666);
 	if (fileDescriptor == -1) {

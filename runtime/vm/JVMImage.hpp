@@ -33,12 +33,6 @@
 #include <sys/mman.h>
 
 
-struct JVMImageHeader
-{
-	UDATA imageSize;
-	uintptr_t heapAddress;
-};
-
 class JVMImage
 {
 public:
