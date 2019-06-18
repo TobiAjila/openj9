@@ -75,7 +75,7 @@ protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
 public:
 	JVMImage(J9JavaVM *vm);
-	~JVMImage(void);
+	~JVMImage();
 
 	static JVMImage* createInstance(J9JavaVM *javaVM);
 	static JVMImage* getInstance(void);

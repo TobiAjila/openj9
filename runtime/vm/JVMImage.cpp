@@ -46,7 +46,7 @@ JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_isWarmRun = J9_ARE_ALL_BITS_SET(javaVM->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN);
 }
 
-JVMImage::~JVMImage(void)
+JVMImage::~JVMImage()
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
@@ -302,15 +302,15 @@ JVMImage::readImageFromFile(void)
 	/* Read image header then mmap the rest of the image (heap) into memory */
 	omrfile_read(fileDescriptor, (void *)_jvmImageHeader, sizeof(JVMImageHeader));
 	uint64_t fileSize = omrfile_flength(fileDescriptor);
-	if (sizeof(JVMImageHeader) + _jvmImageHeader->imageSize != fileSize) {
+	if (_jvmImageHeader->imageSize != fileSize) {
 		return false;
 	}
 
-	JVMImageHeader *block = (JVMImageHeader *)mmap(
+	_jvmImageHeader = (JVMImageHeader *)mmap(
 		(void *)_jvmImageHeader->heapAddress,
 		sizeof(JVMImageHeader) + _jvmImageHeader->imageSize,
 		PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
-	_heap = (J9Heap *)(block + 1);
+	_heap = (J9Heap *)(_jvmImageHeader + 1);
 
 	omrfile_close(fileDescriptor);
 
@@ -334,8 +334,7 @@ JVMImage::writeImageToFile(void)
 	}
 
 	/* Write header followed by the heap */
-	if (sizeof(JVMImageHeader) != omrfile_write(fileDescriptor, (void *)_jvmImageHeader, sizeof(JVMImageHeader))
-		|| (intptr_t)_jvmImageHeader->imageSize != omrfile_write(fileDescriptor, (void *)_heap, _jvmImageHeader->imageSize)) {
+	if ((intptr_t)_jvmImageHeader->imageSize != omrfile_write(fileDescriptor, (void *)_jvmImageHeader, _jvmImageHeader->imageSize)) {
 		return false;
 	}
 
