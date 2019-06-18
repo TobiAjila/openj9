@@ -88,6 +88,8 @@ public:
 	void freeSubAllocatedMemory(void *memStart); /* TODO: Extension functions for heap (not used currently) */
 
 	void registerEntryInTable(ImageTableHeader *table, UDATA entry);
+	void deregisterEntryInTable(ImageTableHeader* table, UDATA entry);
+	UDATA* findEntryInTable(ImageTableHeader* table, UDATA entry);
 
 	void destroyMonitor(void);
 
