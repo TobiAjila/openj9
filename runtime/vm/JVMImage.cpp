@@ -120,9 +120,9 @@ JVMImage::setupColdRun(void)
 		return IMAGE_ERROR;
 	}
 
-	if (allocateTable(getClassLoaderTable(), INITIAL_CLASSLOADER_TABLE_SIZE) == NULL
-		|| allocateTable(getClassSegmentTable(), INITIAL_CLASS_TABLE_SIZE) == NULL
-		|| allocateTable(getClassPathEntryTable(), INITIAL_CLASSPATH_TABLE_SIZE) == NULL) {
+	if ((NULL == allocateTable(getClassLoaderTable(), INITIAL_CLASSLOADER_TABLE_SIZE))
+		|| (NULL == allocateTable(getClassSegmentTable(), INITIAL_CLASS_TABLE_SIZE))
+		|| (NULL == allocateTable(getClassPathEntryTable(), INITIAL_CLASSPATH_TABLE_SIZE))) {
 		return IMAGE_ERROR;
 	}
 
@@ -174,8 +174,8 @@ JVMImage::allocateImageTableHeaders(void)
 	WSRP_SET(_jvmImageHeader->classPathEntryTable, subAllocateMemory(sizeof(ImageTableHeader)));
 
 	if ((0 == _jvmImageHeader->classLoaderTable)
-			|| (0 == _jvmImageHeader->classSegmentTable)
-			|| (0 == _jvmImageHeader->classPathEntryTable)
+		|| (0 == _jvmImageHeader->classSegmentTable)
+		|| (0 == _jvmImageHeader->classPathEntryTable)
 	) {
 		return false;
 	}
