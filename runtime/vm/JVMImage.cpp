@@ -356,12 +356,12 @@ initializeJVMImage(J9JavaVM *vm)
 	}
 
 	if (IS_COLD_RUN(vm)
-		&& (jvmImage->setupColdRun() == IMAGE_ERROR)) {
+		&& (IMAGE_ERROR == jvmImage->setupColdRun())) {
 		goto _error;
 	}
 
 	if(IS_WARM_RUN(vm)
-		&& (jvmImage->setupWarmRun() == IMAGE_ERROR)) {
+		&& (IMAGE_ERROR == jvmImage->setupWarmRun())) {
 		goto _error;
 	}
 
