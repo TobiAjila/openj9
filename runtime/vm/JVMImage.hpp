@@ -49,19 +49,6 @@ private:
 
 	char *_dumpFileName;
 	bool _isWarmRun;
-
-	bool initializeMonitor(void);
-
-	void* allocateImageMemory(UDATA size);
-	void* reallocateImageMemory(UDATA size);
-	void* initializeHeap(void);
-
-	bool allocateImageTableHeaders(void);
-	void* allocateTable(ImageTableHeader *table, uintptr_t tableSize);
-	void* reallocateTable(ImageTableHeader *table, uintptr_t tableSize);
-
-	bool readImageFromFile(void);
-	bool writeImageToFile(void);
 protected:
 public:
 	static const UDATA INITIAL_HEAP_SIZE;
@@ -71,6 +58,18 @@ public:
 	 * Function Members
 	 */
 private:
+	bool initializeMonitor(void);
+
+	void* allocateImageMemory(UDATA size);
+	void* reallocateImageMemory(UDATA size);
+	void* initializeHeap(void);
+
+	bool allocateImageTableHeaders(void);
+	void* allocateTable(ImageTableHeader* table, uintptr_t tableSize);
+	void* reallocateTable(ImageTableHeader* table, uintptr_t tableSize);
+
+	bool readImageFromFile(void);
+	bool writeImageToFile(void);
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
 public:
