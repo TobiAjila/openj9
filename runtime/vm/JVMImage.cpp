@@ -308,7 +308,7 @@ JVMImage::readImageFromFile(void)
 
 	_jvmImageHeader = (JVMImageHeader *)mmap(
 		(void *)_jvmImageHeader->heapAddress,
-		sizeof(JVMImageHeader) + _jvmImageHeader->imageSize,
+		_jvmImageHeader->imageSize,
 		PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
 
