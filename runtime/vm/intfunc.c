@@ -358,6 +358,8 @@ J9InternalVMFunctions J9InternalFunctions = {
 	getVMRuntimeState,
 	updateVMRuntimeState,
 	getVMMinIdleWaitTime,
+	mem_allocate_memory,
+	mem_free_memory,
 #if defined(J9VM_RAS_EYECATCHERS)
 	j9rasSetServiceLevel,
 #endif /* J9VM_RAS_EYECATCHERS */

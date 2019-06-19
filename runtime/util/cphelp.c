@@ -22,6 +22,7 @@
 #include "hashtable_api.h"
 #include "util_api.h"
 #include "ut_j9vmutil.h"
+#include "j9protos.h"
 
 UDATA
 getClassPathEntry(J9VMThread * currentThread, J9ClassLoader * classLoader, IDATA cpIndex, J9ClassPathEntry * cpEntry)
@@ -192,6 +193,8 @@ UDATA
 addJarToSystemClassLoaderClassPathEntries(J9JavaVM *vm, const char *filename)
 {
 	J9ClassLoader *classLoader = vm->systemClassLoader;
+	J9InternalVMFunctions const * const vmFuncs = vm->internalVMFunctions;
+
 	UDATA newCount = 0;
 	U_32 entryIndex = 0;
 	J9ClassPathEntry *newEntries = NULL;
@@ -207,7 +210,13 @@ addJarToSystemClassLoaderClassPathEntries(J9JavaVM *vm, const char *filename)
 		classPathLength += oldEntries[entryIndex].pathLength + 1;	/* add 1 for a null character */
 	}
 	/* Copy and grow the classPathEntries array */
-	newEntries = (J9ClassPathEntry*) j9mem_allocate_memory(sizeof(J9ClassPathEntry) * (entryCount + 1) + classPathLength, J9MEM_CATEGORY_CLASSES);
+
+	if (IS_COLD_RUN(vm)) {
+		newEntries = (J9ClassPathEntry*) vmFuncs->mem_allocate_memory(sizeof(J9ClassPathEntry) * (entryCount + 1) + classPathLength);
+	} else {
+		newEntries = (J9ClassPathEntry*) j9mem_allocate_memory(sizeof(J9ClassPathEntry) * (entryCount + 1) + classPathLength, J9MEM_CATEGORY_CLASSES);
+	}
+	
 	if (NULL != newEntries) {
 		J9ClassPathEntry *cpEntry = &newEntries[entryCount];
 		U_8 *stringCursor = (U_8 *)(cpEntry + 1);
@@ -244,12 +253,21 @@ addJarToSystemClassLoaderClassPathEntries(J9JavaVM *vm, const char *filename)
 		newCount = entryCount + 1;
 		classLoader->classPathEntries = newEntries;
 		classLoader->classPathEntryCount = newCount;
-		j9mem_free_memory(oldEntries);
+
+		if (IS_COLD_RUN(vm)) {
+			vmFuncs->mem_free_memory(oldEntries);
+		} else {
+			j9mem_free_memory(oldEntries);
+		}
 	}
 done:
 	/* If any error occurred, discard any allocated memory and throw OutOfMemoryError */
 	if (0 == newCount) {
-		j9mem_free_memory(newEntries);
+		if (IS_COLD_RUN(vm)) {
+			vmFuncs->mem_free_memory(newEntries);
+		} else {
+			j9mem_free_memory(newEntries);
+		}
 	}
 	return newCount;
 }
