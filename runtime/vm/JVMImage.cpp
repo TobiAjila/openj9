@@ -320,7 +320,7 @@ JVMImage::readImageFromFile(void)
 {
 	Trc_VM_ReadImageFromFile_Entry(_heap, _dumpFileName);
 
-	OMRPortLibrary* portLibrary = IMAGEPORT_FROM_JAVAVM(_vm);
+	OMRPortLibrary *portLibrary = IMAGEPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
@@ -353,7 +353,7 @@ JVMImage::writeImageToFile(void)
 {
 	Trc_VM_WriteImageToFile_Entry(_heap, _dumpFileName);
 
-	OMRPortLibrary* portLibrary = IMAGEPORT_FROM_JAVAVM(_vm);
+	OMRPortLibrary *portLibrary = IMAGEPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
 	omrthread_monitor_enter(_jvmImageMonitor);
@@ -384,7 +384,6 @@ setupJVMImagePortLibrary(J9JavaVM *javaVM)
 	JVMImagePortLibrary *jvmImagePortLibrary = (JVMImagePortLibrary*)j9mem_allocate_memory(sizeof(JVMImagePortLibrary), OMRMEM_CATEGORY_PORT_LIBRARY);
 
 	OMRPORT_ACCESS_FROM_J9PORT(javaVM->portLibrary);
-	memset(&(jvmImagePortLibrary->portLibrary), 0, sizeof(OMRPortLibrary));
 	memcpy(&(jvmImagePortLibrary->portLibrary), privateOmrPortLibrary, sizeof(OMRPortLibrary));
 	jvmImagePortLibrary->portLibrary.mem_allocate_memory = image_mem_allocate_memory;
 	jvmImagePortLibrary->portLibrary.mem_free_memory = image_mem_free_memory;
