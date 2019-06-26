@@ -22,11 +22,13 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "j9user.h"
 #include "j9protos.h"
 #include "j9cfg.h"
 #include "j9port.h"
+#include "jvmimageport.h"
 #include "j9consts.h"
 #include "ut_j9vm.h"
 #include "vm_internal.h"
@@ -96,6 +98,7 @@ void freeMemorySegment(J9JavaVM *javaVM, J9MemorySegment *segment, BOOLEAN freeD
 {
 	J9MemorySegmentList *segmentList;
 	PORT_ACCESS_FROM_GINFO(javaVM);
+	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
 
 	segmentList = segment->memorySegmentList;
 
@@ -130,10 +133,20 @@ void freeMemorySegment(J9JavaVM *javaVM, J9MemorySegment *segment, BOOLEAN freeD
 		} else if ((useAdvise) && (MEMORY_TYPE_JIT_SCRATCH_SPACE & segment->type)) {
 			j9mem_advise_and_free_memory(segment->baseAddress);
 		} else if (segment->type & (MEMORY_TYPE_RAM_CLASS | MEMORY_TYPE_UNDEAD_CLASS)) {
-			if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
-				j9mem_free_memory32(segment->baseAddress);
+			if (IS_COLD_RUN(javaVM)) {
+				if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
+					assert(!"There is no support for compressedRefs");
+				}
+				else {
+					imem_free_memory(segment->baseAddress);
+				}
 			} else {
-				j9mem_free_memory(segment->baseAddress);
+				if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
+					j9mem_free_memory32(segment->baseAddress);
+				}
+				else {
+					j9mem_free_memory(segment->baseAddress);
+				}
 			}
 		} else {
 			j9mem_free_memory(segment->baseAddress);
@@ -214,6 +227,7 @@ allocateMemoryForSegment(J9JavaVM *javaVM,J9MemorySegment *segment, J9PortVmemPa
 {
 	void *tmpAddr;
 	PORT_ACCESS_FROM_GINFO(javaVM);
+	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
 
 	/* The order of these checks is important.
 	 * MEMORY_TYPE_VIRTUAL is expected to be used along with another bit, like MEMORY_TYPE_JIT_SCRATCH_SPACE.
@@ -229,10 +243,20 @@ allocateMemoryForSegment(J9JavaVM *javaVM,J9MemorySegment *segment, J9PortVmemPa
 		tmpAddr = j9vmem_reserve_memory_ex(&segment->vmemIdentifier, vmemParams);
 		Trc_VM_virtualRAMClassAlloc(tmpAddr);
 	} else if (J9_ARE_ALL_BITS_SET(segment->type, MEMORY_TYPE_RAM_CLASS)) {
-		if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
-			tmpAddr = j9mem_allocate_memory32(segment->size, memoryCategory);
+		if (IS_COLD_RUN(javaVM)) {
+			if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
+				assert(!"There is no support for compressedRefs");
+			}
+			else {
+				tmpAddr = imem_allocate_memory(segment->size, memoryCategory);
+			}
 		} else {
-			tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
+			if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
+				tmpAddr = j9mem_allocate_memory32(segment->size, memoryCategory);
+			}
+			else {
+				tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
+			}
 		}
 	} else {
 		tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);

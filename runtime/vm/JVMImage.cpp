@@ -24,7 +24,7 @@
 
 #include <sys/mman.h>
 
-const UDATA JVMImage::INITIAL_HEAP_SIZE = 1024 * 1024; /* TODO: reallocation will fail so initial heap size is large (Should be 8 byte aligned) */
+const UDATA JVMImage::INITIAL_HEAP_SIZE = 100 * 1024 * 1024; /* TODO: reallocation will fail so initial heap size is large (Should be 8 byte aligned) */
 const UDATA JVMImage::INITIAL_IMAGE_SIZE = sizeof(JVMImageHeader) + JVMImage::INITIAL_HEAP_SIZE;
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
