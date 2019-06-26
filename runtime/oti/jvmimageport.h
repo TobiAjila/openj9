@@ -23,7 +23,6 @@ typedef struct JVMImagePortLibrary {
 	void* jvmImage;
 } JVMImagePortLibrary;
 
-
 #define imem_allocate_memory(param1, category) IMAGE_OMRPORT_FROM_JVMIMAGEPORT(privateImagePortLibrary)->mem_allocate_memory(OMRPORT_FROM_J9PORT(privatePortLibrary),param1, J9_GET_CALLSITE(), category)
 #define imem_free_memory(param1) IMAGE_OMRPORT_FROM_JVMIMAGEPORT(privatePortLibrary)->mem_free_memory(OMRPORT_FROM_J9PORT(privatePortLibrary),param1)
 
