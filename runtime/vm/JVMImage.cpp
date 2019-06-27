@@ -40,7 +40,7 @@ JVMImage::~JVMImage()
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	j9mem_free_memory((void*)_jvmImageHeader);
+	j9mem_free_memory((void *)_jvmImageHeader);
 }
 
 bool
@@ -347,7 +347,7 @@ JVMImage::readImageFromFile(void)
 		imageHeaderBuffer->imageSize,
 		PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
-	j9mem_free_memory((void*)imageHeaderBuffer);
+	j9mem_free_memory((void *)imageHeaderBuffer);
 
 	omrfile_close(fileDescriptor);
 
