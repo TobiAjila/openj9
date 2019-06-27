@@ -358,6 +358,7 @@ J9InternalVMFunctions J9InternalFunctions = {
 	getVMRuntimeState,
 	updateVMRuntimeState,
 	getVMMinIdleWaitTime,
+	registerCPEntry,
 #if defined(J9VM_RAS_EYECATCHERS)
 	j9rasSetServiceLevel,
 #endif /* J9VM_RAS_EYECATCHERS */
