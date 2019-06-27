@@ -68,7 +68,6 @@ private:
 	void* reallocateTable(ImageTableHeader *table, uintptr_t tableSize);
 
 	bool readImageFromFile(void);
-	bool writeImageToFile(void);
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
 public:
@@ -79,6 +78,8 @@ public:
 
 	ImageRC setupWarmRun(void);
 	ImageRC setupColdRun(void);
+
+	bool writeImageToFile(void);
 
 	void* subAllocateMemory(uintptr_t byteAmount);
 	void* reallocateMemory(void *address, uintptr_t byteAmount); /* TODO: Extension functions for heap (not used currently) */
