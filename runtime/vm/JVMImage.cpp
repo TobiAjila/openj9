@@ -322,8 +322,6 @@ JVMImage::readImageFromFile(void)
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-	PORT_ACCESS_FROM_JAVAVM(_vm);
-
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead, 0444);
 	if (-1 == fileDescriptor) {
 		return false;
@@ -331,23 +329,18 @@ JVMImage::readImageFromFile(void)
 
 	/* Read image header then mmap the rest of the image (heap) into memory */
 	/* TODO: Should only read imageAddress and size because that is the only data we need for mmap */
-	JVMImageHeader *imageHeaderBuffer = (JVMImageHeader *)j9mem_allocate_memory(sizeof(JVMImageHeader), J9MEM_CATEGORY_CLASSES); /* TODO: change category */
-	if (NULL == imageHeaderBuffer) {
-		return NULL;
-	}
-
-	omrfile_read(fileDescriptor, (void *)imageHeaderBuffer, sizeof(JVMImageHeader));
+	JVMImageHeader imageHeaderBuffer;
+	omrfile_read(fileDescriptor, (void *)&imageHeaderBuffer, sizeof(JVMImageHeader));
 	uint64_t fileSize = omrfile_flength(fileDescriptor);
-	if (imageHeaderBuffer->imageSize != fileSize) {
+	if (imageHeaderBuffer.imageSize != fileSize) {
 		return false;
 	}
 
 	_jvmImageHeader = (JVMImageHeader *)mmap(
-		(void *)imageHeaderBuffer->imageAddress,
-		imageHeaderBuffer->imageSize,
+		(void *)imageHeaderBuffer.imageAddress,
+		imageHeaderBuffer.imageSize,
 		PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
-	j9mem_free_memory((void *)imageHeaderBuffer);
 
 	omrfile_close(fileDescriptor);
 
