@@ -112,9 +112,17 @@ void deregisterCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 * Shut down sequence of JVMImage
 * Frees memory of heap variables and jvmimage instance
 *
-* @param javaVM[in] the java vm 
+* @param javaVM[in] the java vm
 */
 void shutdownJVMImage(J9JavaVM *vm);
+
+/*
+* Frees the memory associated with the JVMImage
+* If it is a cold run it will perform fixup and write the image to file
+*
+* @param javaVM[in] the java vm
+*/
+void teardownJVMImage(J9JavaVM *javaVM);
 
 #ifdef __cplusplus
 }

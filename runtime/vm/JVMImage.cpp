@@ -497,6 +497,16 @@ shutdownJVMImage(J9JavaVM *javaVM)
 	}
 }
 
+extern "C" void
+teardownJVMImage(J9JavaVM *javaVM)
+{
+	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
+
+	if (IS_COLD_RUN(javaVM)) {
+		jvmImage->writeImageToFile();
+	}
+}
+
 extern "C" void *
 image_mem_allocate_memory(struct OMRPortLibrary *portLibrary, uintptr_t byteAmount, const char *callSite, uint32_t category)
 {
