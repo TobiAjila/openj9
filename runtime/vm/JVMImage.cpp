@@ -359,7 +359,7 @@ JVMImage::writeImageToFile(void)
 
 	omrthread_monitor_enter(_jvmImageMonitor);
 
-	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenWrite | EsOpenTruncate, 0666);
+	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways, 0666);
 	if (-1 == fileDescriptor) {
 		return false;
 	}
