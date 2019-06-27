@@ -103,7 +103,7 @@ JVMImage::setupColdRun(void)
 	}
 
 	if ((NULL == allocateTable(getClassLoaderTable(), INITIAL_CLASSLOADER_TABLE_SIZE))
-		|| (NULL == allocateTable(getClassSegmentTable(), INITIAL_CLASS_TABLE_SIZE))
+		|| (NULL == allocateTable(getClassTable(), INITIAL_CLASS_TABLE_SIZE))
 		|| (NULL == allocateTable(getClassPathEntryTable(), INITIAL_CLASSPATH_TABLE_SIZE))) {
 		return IMAGE_ERROR;
 	}
@@ -151,11 +151,11 @@ bool
 JVMImage::allocateImageTableHeaders(void)
 {
 	WSRP_SET(_jvmImageHeader->classLoaderTable, subAllocateMemory(sizeof(ImageTableHeader)));
-	WSRP_SET(_jvmImageHeader->classSegmentTable, subAllocateMemory(sizeof(ImageTableHeader)));
+	WSRP_SET(_jvmImageHeader->classTable, subAllocateMemory(sizeof(ImageTableHeader)));
 	WSRP_SET(_jvmImageHeader->classPathEntryTable, subAllocateMemory(sizeof(ImageTableHeader)));
 
 	if ((0 == _jvmImageHeader->classLoaderTable)
-		|| (0 == _jvmImageHeader->classSegmentTable)
+		|| (0 == _jvmImageHeader->classTable)
 		|| (0 == _jvmImageHeader->classPathEntryTable)
 	) {
 		return false;
@@ -432,13 +432,13 @@ registerClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader)
 }
 
 extern "C" void
-registerClassSegment(J9JavaVM *javaVM, J9Class *clazz)
+registerClass(J9JavaVM *javaVM, J9Class *clazz)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 
 	Assert_VM_notNull(jvmImage);
 
-	jvmImage->registerEntryInTable(jvmImage->getClassSegmentTable(), (UDATA)clazz);
+	jvmImage->registerEntryInTable(jvmImage->getClassTable(), (UDATA)clazz);
 }
 
 extern "C" void
@@ -462,13 +462,13 @@ deregisterClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader)
 }
 
 extern "C" void
-deregisterClassSegment(J9JavaVM *javaVM, J9Class *clazz)
+deregisterClass(J9JavaVM *javaVM, J9Class *clazz)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 
 	Assert_VM_notNull(jvmImage);
 
-	jvmImage->deregisterEntryInTable(jvmImage->getClassSegmentTable(), (UDATA)clazz);
+	jvmImage->deregisterEntryInTable(jvmImage->getClassTable(), (UDATA)clazz);
 }
 
 extern "C" void

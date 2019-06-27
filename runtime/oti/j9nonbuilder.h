@@ -4784,6 +4784,12 @@ typedef struct J9InternalVMFunctions {
 	void ( *setNestmatesError)(struct J9VMThread *vmThread, struct J9Class *nestMember, struct J9Class *nestHost, IDATA errorCode);
 #endif /* J9VM_OPT_VALHALLA_NESTMATES */
 	BOOLEAN ( *areValueTypesEnabled)(struct J9JavaVM *vm);
+	void ( *registerClassLoader)(struct J9JavaVM* javaVM, struct J9ClassLoader* classLoader);
+	void ( *registerClass)(struct J9JavaVM* javaVM, struct J9Class* clazz);
+	void ( *registerCPEntry)(struct J9JavaVM* javaVM, struct J9ClassPathEntry* cpEntry);
+	void ( *deregisterClassLoader)(struct J9JavaVM* javaVM, struct J9ClassLoader* classLoader);
+	void ( *deregisterClass)(struct J9JavaVM* javaVM, struct J9Class* clazz);
+	void ( *deregisterCPEntry)(struct J9JavaVM* javaVM, struct J9ClassPathEntry* cpEntry);
 } J9InternalVMFunctions;
 
 /* Jazz 99339: define a new structure to replace JavaVM so as to pass J9NativeLibrary to JVMTIEnv  */

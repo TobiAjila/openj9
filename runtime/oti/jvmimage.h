@@ -48,7 +48,7 @@ typedef struct JVMImageHeader {
 	UDATA imageSize; /* image size in bytes */
 	uintptr_t imageAddress;
 	J9WSRP classLoaderTable;
-	J9WSRP classSegmentTable;
+	J9WSRP classTable;
 	J9WSRP classPathEntryTable;
 } JVMImageHeader;
 

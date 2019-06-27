@@ -373,4 +373,10 @@ J9InternalVMFunctions J9InternalFunctions = {
 	setNestmatesError,
 #endif
 	areValueTypesEnabled,
+	registerClassLoader,
+	registerClass,
+	registerCPEntry,
+	deregisterClassLoader,
+	deregisterClass,
+	deregisterCPEntry,
 };

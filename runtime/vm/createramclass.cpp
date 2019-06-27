@@ -2930,6 +2930,7 @@ internalCreateRAMClassFromROMClass(J9VMThread *vmThread, J9ClassLoader *classLoa
 	J9FlattenedClassCache *flattenedClassCache = (J9FlattenedClassCache *) flattenedClassCacheBuffer;
 	PORT_ACCESS_FROM_VMC(vmThread);
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
+	J9InternalVMFunctions const* const vmFuncs = javaVM->internalVMFunctions;
 
 	/* if this is an anon class classLoader should be anonClassLoader */
 	if (J9_ARE_ALL_BITS_SET(options, J9_FINDCLASS_FLAG_ANON)) {
@@ -3127,6 +3128,9 @@ retry:
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 
 		result->classFlags = classFlags;
+		if (IS_COLD_RUN(javaVM)) {
+			vmFuncs->registerClass(javaVM, result);
+		}
 	}
 
 	return result;
