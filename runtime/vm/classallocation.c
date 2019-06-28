@@ -193,9 +193,6 @@ allocateClassLoader(J9JavaVM *javaVM)
 			freeClassLoader(classLoader, javaVM, NULL, TRUE);
 			classLoader = NULL;
 		} else {
-			if (IS_COLD_RUN(javaVM)) {
-				registerClassLoader(javaVM, classLoader);
-			}
 			TRIGGER_J9HOOK_VM_CLASS_LOADER_CREATED(javaVM->hookInterface, javaVM, classLoader);
 		}
 	}
@@ -412,9 +409,6 @@ freeClassLoader(J9ClassLoader *classLoader, J9JavaVM *javaVM, J9VMThread *vmThre
 	threadList = classLoader->gcThreadNotification;
 #endif /* J9VM_GC_DYNAMIC_CLASS_UNLOADING */
 
-	if (IS_COLD_RUN(javaVM)) {
-		deregisterClassLoader(javaVM, classLoader);
-	}
 	pool_removeElement(javaVM->classLoaderBlocks, classLoader);
 
 #ifdef J9VM_GC_DYNAMIC_CLASS_UNLOADING

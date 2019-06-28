@@ -67,6 +67,10 @@ private:
 	void* reallocateTable(ImageTableHeader *table, uintptr_t tableSize);
 
 	bool readImageFromFile(void);
+	bool writeImageToFile(void);
+
+	void fixupClassLoaders(void);
+	void fixupClasses(void);
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
 public:
@@ -86,10 +90,15 @@ public:
 
 	void registerEntryInTable(ImageTableHeader *table, UDATA entry);
 	void deregisterEntryInTable(ImageTableHeader *table, UDATA entry);
-	UDATA* findEntryInTable(ImageTableHeader *table, UDATA entry);
 
 	void destroyMonitor(void);
 
+	/* TODO: currently the three major class loaders have their own accessors/mutators. This could be ported to hash table once user defined class works */
+	void setClassLoader(J9ClassLoader* classLoader, uint32_t classLoaderCategory);
+	J9ClassLoader* getSystemClassLoader(void) { return WSRP_GET(_jvmImageHeader->systemClassLoader, J9ClassLoader*); }
+	J9ClassLoader* getApplicationClassLoader(void) { return WSRP_GET(_jvmImageHeader->appClassLoader, J9ClassLoader*); }
+	J9ClassLoader* getExtensionClassLoader(void) { return WSRP_GET(_jvmImageHeader->extensionClassLoader, J9ClassLoader*); }
+	
 	ImageTableHeader* getClassLoaderTable(void) { return WSRP_GET(_jvmImageHeader->classLoaderTable, ImageTableHeader*); }
 	ImageTableHeader* getClassTable(void) { return WSRP_GET(_jvmImageHeader->classTable, ImageTableHeader*); }
 	ImageTableHeader* getClassPathEntryTable(void) { return WSRP_GET(_jvmImageHeader->classPathEntryTable, ImageTableHeader*); }

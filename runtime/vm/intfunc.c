@@ -376,7 +376,7 @@ J9InternalVMFunctions J9InternalFunctions = {
 	registerClassLoader,
 	registerClass,
 	registerCPEntry,
-	deregisterClassLoader,
 	deregisterClass,
 	deregisterCPEntry,
+	findClassLoader,
 };

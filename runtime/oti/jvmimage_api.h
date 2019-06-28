@@ -61,12 +61,13 @@ void image_mem_free_memory(struct OMRPortLibrary *portLibrary, void *memoryPoint
 UDATA initializeJVMImage(J9JavaVM *javaVM);
 
 /*
-* Registers class loader in table
+* Registers class loader to one of the three defined class loaders
 *
 * @param javaVM[in] the java vm
 * @param classLoader[in] J9ClassLoader to register
+* @param classLoaderCategory[in] category to identify the type of classloader
 */
-void registerClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader);
+void registerClassLoader(J9JavaVM* javaVM, J9ClassLoader* classLoader, uint32_t classLoaderCategory);
 
 /*
 * Registers class in table
@@ -85,14 +86,6 @@ void registerClass(J9JavaVM *javaVM, J9Class *clazz);
 void registerCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 
 /*
-* Deregisters class loader from table
-*
-* @param javaVM[in] the java vm
-* @param classLoader[in] J9ClassLoader to register
-*/
-void deregisterClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader);
-
-/*
 * Deregisters class from table
 *
 * @param javaVM[in] the java vm
@@ -107,6 +100,42 @@ void deregisterClass(J9JavaVM *javaVM, J9Class *clazz);
 * @param cpEntry[in] J9ClassPathEntry to register
 */
 void deregisterCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
+
+/*
+* Initializes for iterator pattern 
+*
+* @param table[in] the table to iterate
+* 
+* @return the starting element in the table. NULL if empty
+*/
+void* imageTableStartDo(ImageTableHeader* table);
+
+/*
+* Next element in table
+*
+* @param table[in] the table to iterate
+*
+* @return the next element in the table. NULL if no next element
+*/
+void* imageTableNextDo(ImageTableHeader* table);
+
+/*
+* Checks table for entry location
+*
+* @param table[in] the table to iterate
+* @param entry[in] the entry to find
+*
+* @return location of entry in table. NULL if entry not in table
+*/
+UDATA* findEntryLocationInTable(ImageTableHeader* table, UDATA entry);
+
+/*
+* Finding class loader based on category
+*
+* @param javaVM[in] the java vm
+* @param classLoaderCategory[in] the category of class loaders
+*/
+J9ClassLoader* findClassLoader(J9JavaVM* javaVM, uint32_t classLoaderCategory);
 
 /*
 * Shut down sequence of JVMImage

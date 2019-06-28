@@ -2262,9 +2262,17 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 		case SYSTEM_CLASSLOADER_SET :
 
 			loadInfo = FIND_DLL_TABLE_ENTRY( FUNCTION_VM_INIT );
-			if (NULL == (vm->systemClassLoader = allocateClassLoader(vm))) {
+
+			/* set system class loader if warm run */
+			if (IS_WARM_RUN(vm)) {
+				vm->systemClassLoader = findClassLoader(vm, IMAGE_CATEGORY_SYSTEM_CLASSLOADER);
+			}
+			/* fall back on allocation if find fails */
+			if (NULL == vm->systemClassLoader && NULL == (vm->systemClassLoader = allocateClassLoader(vm))) {
 				loadInfo->fatalErrorStr = "cannot allocate system classloader";
 				goto _error;
+			} else if (IS_COLD_RUN(vm)) {
+				registerClassLoader(vm, vm->systemClassLoader, IMAGE_CATEGORY_SYSTEM_CLASSLOADER);
 			}
 
 			if (J2SE_VERSION(vm) >= J2SE_V11) {
