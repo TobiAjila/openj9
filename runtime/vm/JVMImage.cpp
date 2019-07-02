@@ -357,8 +357,6 @@ JVMImage::writeImageToFile(void)
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-	omrthread_monitor_enter(_jvmImageMonitor);
-
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways, 0666);
 	if (-1 == fileDescriptor) {
 		return false;
@@ -370,8 +368,6 @@ JVMImage::writeImageToFile(void)
 	}
 
 	omrfile_close(fileDescriptor);
-
-	omrthread_monitor_exit(_jvmImageMonitor);
 
 	Trc_VM_WriteImageToFile_Exit();
 

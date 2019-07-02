@@ -454,9 +454,11 @@ jint JNICALL DestroyJavaVM(JavaVM * javaVM)
 	 * in protectedDestroyJavaVM
 	 */
 	Trc_JNIinv_DestroyJavaVM_Entry(javaVM);
-
-	teardownJVMImage(vm);
-
+	
+	if (IS_COLD_RUN(vm) || IS_WARM_RUN(vm)) {
+		teardownJVMImage(vm);
+	}
+	
 
 	/* There is a cyclic dependency when using HealthCenter which causes JVM to hang during shutdown.
 	 * To break this cycle, thread doing the shutdown needs to be detached to notify Healthcenter that
