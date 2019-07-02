@@ -117,12 +117,12 @@ JVMImage::allocateImageMemory(UDATA size)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	imageAddress = j9mem_allocate_memory(size + PAGE_SIZE, J9MEM_CATEGORY_CLASSES); //TODO: change category
+	void *imageAddress = j9mem_allocate_memory(size + PAGE_SIZE, J9MEM_CATEGORY_CLASSES); //TODO: change category
 	if (NULL == imageAddress) {
 		return NULL;
 	}
 
-	_jvmImageHeader = PAGE_SIZE_ALIGNED_ADDRESS(address);
+	_jvmImageHeader = PAGE_SIZE_ALIGNED_ADDRESS(imageAddress);
 	_jvmImageHeader->imageAddress = (uintptr_t)imageAddress;
 	_jvmImageHeader->imageAlignedAddress = (uintptr_t)_jvmImageHeader;
 	_jvmImageHeader->imageSize = size;
