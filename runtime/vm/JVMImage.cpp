@@ -41,7 +41,7 @@ JVMImage::~JVMImage()
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	j9mem_free_memory((void *)_jvmImageHeader);
+	j9mem_free_memory((void *)_jvmImageHeader->imageAddress);
 }
 
 bool
@@ -122,7 +122,7 @@ JVMImage::allocateImageMemory(UDATA size)
 		return NULL;
 	}
 
-	_jvmImageHeader = PAGE_SIZE_ALIGNED_ADDRESS(imageAddress);
+	_jvmImageHeader = (JVMImageHeader *) PAGE_SIZE_ALIGNED_ADDRESS(imageAddress);
 	_jvmImageHeader->imageAddress = (uintptr_t)imageAddress;
 	_jvmImageHeader->imageAlignedAddress = (uintptr_t)_jvmImageHeader;
 	_jvmImageHeader->imageSize = size;
@@ -340,7 +340,7 @@ JVMImage::readImageFromFile(void)
 	}
 
 	_jvmImageHeader = (JVMImageHeader *)mmap(
-		(void *)imageHeaderBuffer.imageAddress,
+		(void *)imageHeaderBuffer.imageAlignedAddress,
 		imageHeaderBuffer.imageSize,
 		PROT_READ, MAP_PRIVATE | MAP_FIXED, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
