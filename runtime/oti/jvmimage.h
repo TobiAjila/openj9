@@ -24,7 +24,7 @@
 #define jvmimage_h
 
 #define PAGE_SIZE 4096
-#define PAGE_SIZE_MASK PAGE_SIZE - 1
+#define PAGE_SIZE_MASK (PAGE_SIZE - 1)
 #define PAGE_SIZE_ALIGNED_ADDRESS(address) (void *) (((uintptr_t) (address) + PAGE_SIZE_MASK) & (~PAGE_SIZE_MASK))
 
 #define IS_WARM_RUN(javaVM) J9_ARE_ALL_BITS_SET(javaVM->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)
