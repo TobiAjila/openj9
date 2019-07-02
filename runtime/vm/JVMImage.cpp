@@ -24,8 +24,10 @@
 
 #include <sys/mman.h>
 
-const UDATA JVMImage::INITIAL_HEAP_SIZE = 100 * 1024 * 1024; /* TODO: reallocation will fail so initial heap size is large (Should be 8 byte aligned) */
-const UDATA JVMImage::INITIAL_IMAGE_SIZE = sizeof(JVMImageHeader) + JVMImage::INITIAL_HEAP_SIZE;
+/* TODO: reallocation will fail so initial heap size is large (Should be PAGE_SIZE aligned) */
+/* TODO: currently only works because JVMImageHeader is 8 byte aligned */
+const UDATA JVMImage::INITIAL_IMAGE_SIZE = 100 * 1024 * 1024;
+
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_vm(javaVM),
@@ -40,7 +42,7 @@ JVMImage::~JVMImage()
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	j9mem_free_memory((void *)_jvmImageHeader);
+	j9mem_free_memory((void *)_jvmImageHeader->imageAddress);
 }
 
 bool
@@ -116,13 +118,15 @@ JVMImage::allocateImageMemory(UDATA size)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	_jvmImageHeader = (JVMImageHeader *)j9mem_allocate_memory(size, J9MEM_CATEGORY_CLASSES); //TODO: change category
-	if (NULL == _jvmImageHeader) {
+	void *imageAddress = j9mem_allocate_memory(size + PAGE_SIZE, J9MEM_CATEGORY_CLASSES); //TODO: change category
+	if (NULL == imageAddress) {
 		return NULL;
 	}
 
+	_jvmImageHeader = (JVMImageHeader *) PAGE_SIZE_ALIGNED_ADDRESS(imageAddress);
+	_jvmImageHeader->imageAddress = (uintptr_t)imageAddress;
+	_jvmImageHeader->imageAlignedAddress = (uintptr_t)_jvmImageHeader;
 	_jvmImageHeader->imageSize = size;
-	_jvmImageHeader->imageAddress = (uintptr_t)_jvmImageHeader;
 
 	return _jvmImageHeader;
 }
@@ -139,7 +143,7 @@ JVMImage::initializeHeap(void)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 	
-	_heap = j9heap_create((J9Heap *)(_jvmImageHeader + 1), JVMImage::INITIAL_HEAP_SIZE, 0);
+	_heap = j9heap_create((J9Heap *)(_jvmImageHeader + 1), JVMImage::INITIAL_IMAGE_SIZE - sizeof(_jvmImageHeader), 0);
 	if (NULL == _heap) {
 		return NULL;
 	}
@@ -337,9 +341,9 @@ JVMImage::readImageFromFile(void)
 	}
 
 	_jvmImageHeader = (JVMImageHeader *)mmap(
-		(void *)imageHeaderBuffer.imageAddress,
+		(void *)imageHeaderBuffer.imageAlignedAddress,
 		imageHeaderBuffer.imageSize,
-		PROT_READ, MAP_PRIVATE, fileDescriptor, 0);
+		PROT_READ, MAP_PRIVATE | MAP_FIXED, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
 
 	omrfile_close(fileDescriptor);
@@ -357,9 +361,7 @@ JVMImage::writeImageToFile(void)
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-	omrthread_monitor_enter(_jvmImageMonitor);
-
-	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenWrite | EsOpenTruncate, 0666);
+	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways | EsOpenWrite, 0666);
 	if (-1 == fileDescriptor) {
 		return false;
 	}
@@ -370,8 +372,6 @@ JVMImage::writeImageToFile(void)
 	}
 
 	omrfile_close(fileDescriptor);
-
-	omrthread_monitor_exit(_jvmImageMonitor);
 
 	Trc_VM_WriteImageToFile_Exit();
 
