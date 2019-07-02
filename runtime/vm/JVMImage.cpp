@@ -24,8 +24,9 @@
 
 #include <sys/mman.h>
 
-const UDATA JVMImage::INITIAL_HEAP_SIZE = 1024 * 1024; /* TODO: reallocation will fail so initial heap size is large (Should be 8 byte aligned) */
-const UDATA JVMImage::INITIAL_IMAGE_SIZE = sizeof(JVMImageHeader) + JVMImage::INITIAL_HEAP_SIZE;
+/* TODO: reallocation will fail so initial heap size is large (Should be 8 byte aligned) */
+/* TODO: currently only works because JVMImageHeader is 8 byte aligned */
+const UDATA JVMImage::INITIAL_IMAGE_SIZE = 1024 * 1024;
 
 JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_vm(javaVM),
@@ -116,13 +117,15 @@ JVMImage::allocateImageMemory(UDATA size)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 
-	_jvmImageHeader = (JVMImageHeader *)j9mem_allocate_memory(size, J9MEM_CATEGORY_CLASSES); //TODO: change category
-	if (NULL == _jvmImageHeader) {
+	imageAddress = j9mem_allocate_memory(size + PAGE_SIZE, J9MEM_CATEGORY_CLASSES); //TODO: change category
+	if (NULL == imageAddress) {
 		return NULL;
 	}
 
+	_jvmImageHeader = PAGE_SIZE_ALIGNED_ADDRESS(address);
+	_jvmImageHeader->imageAddress = (uintptr_t)imageAddress;
+	_jvmImageHeader->imageAlignedAddress = (uintptr_t)_jvmImageHeader;
 	_jvmImageHeader->imageSize = size;
-	_jvmImageHeader->imageAddress = (uintptr_t)_jvmImageHeader;
 
 	return _jvmImageHeader;
 }
@@ -139,7 +142,7 @@ JVMImage::initializeHeap(void)
 {
 	PORT_ACCESS_FROM_JAVAVM(_vm);
 	
-	_heap = j9heap_create((J9Heap *)(_jvmImageHeader + 1), JVMImage::INITIAL_HEAP_SIZE, 0);
+	_heap = j9heap_create((J9Heap *)(_jvmImageHeader + 1), JVMImage::INITIAL_IMAGE_SIZE - sizeof(_jvmImageHeader), 0);
 	if (NULL == _heap) {
 		return NULL;
 	}

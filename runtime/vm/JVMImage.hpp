@@ -51,7 +51,6 @@ private:
 	bool _isWarmRun;
 protected:
 public:
-	static const UDATA INITIAL_HEAP_SIZE;
 	static const UDATA INITIAL_IMAGE_SIZE;
 	
 	/*
