@@ -455,6 +455,9 @@ jint JNICALL DestroyJavaVM(JavaVM * javaVM)
 	 */
 	Trc_JNIinv_DestroyJavaVM_Entry(javaVM);
 
+	teardownJVMImage(vm);
+
+
 	/* There is a cyclic dependency when using HealthCenter which causes JVM to hang during shutdown.
 	 * To break this cycle, thread doing the shutdown needs to be detached to notify Healthcenter that
 	 * it has terminated, and then re-attached as "DestroyJavaVM helper thread".
