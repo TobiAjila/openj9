@@ -639,7 +639,7 @@ freeJavaVM(J9JavaVM * vm)
 		runShutdownStage(vm, INTERPRETER_SHUTDOWN, NULL, 0);
 	}
 
-	if (IS_COLD_RUN(vm)) {
+	if (IS_COLD_RUN(vm) || IS_WARM_RUN(vm)) {
 		J9InternalVMFunctions const * const vmFuncs = vm->internalVMFunctions;
 		vmFuncs->teardownJVMImage(vm);
 	}

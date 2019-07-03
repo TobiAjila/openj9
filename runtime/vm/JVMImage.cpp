@@ -35,7 +35,6 @@ JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_heap(NULL)
 {
 	_dumpFileName = javaVM->ramStateFilePath;
-	_isWarmRun = IS_WARM_RUN(javaVM);
 }
 
 JVMImage::~JVMImage()
@@ -500,8 +499,10 @@ shutdownJVMImage(J9JavaVM *javaVM)
 extern "C" void
 teardownJVMImage(J9JavaVM *javaVM)
 {
-	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
-	jvmImage->writeImageToFile();
+	if (IS_COLD_RUN(javaVM)) {
+		IMAGE_ACCESS_FROM_JAVAVM(javaVM);
+		jvmImage->writeImageToFile();
+	}
 }
 
 extern "C" void *
