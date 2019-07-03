@@ -507,10 +507,6 @@ static char* jvmBufferData(J9StringBuffer* buffer) {
 
 jint JNICALL DestroyJavaVM(JavaVM * javaVM)
 {
-	J9JavaVM *j9JavaVM = (J9JavaVM *)javaVM;
-	J9InternalVMFunctions const * const vmFuncs = j9JavaVM->internalVMFunctions;
-	vmFuncs->teardownJVMImage(j9JavaVM);
-
 	jint rc;
 
 	UT_MODULE_UNLOADED(J9_UTINTERFACE_FROM_VM((J9JavaVM*)javaVM));

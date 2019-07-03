@@ -500,11 +500,7 @@ shutdownJVMImage(J9JavaVM *javaVM)
 extern "C" void
 teardownJVMImage(J9JavaVM *javaVM)
 {
-	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
-
-	if (jvmImage->getIsColdRun()) {
-		jvmImage->writeImageToFile();
-	}
+	jvmImage->writeImageToFile();
 }
 
 extern "C" void *

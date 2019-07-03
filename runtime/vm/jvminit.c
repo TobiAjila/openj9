@@ -639,6 +639,11 @@ freeJavaVM(J9JavaVM * vm)
 		runShutdownStage(vm, INTERPRETER_SHUTDOWN, NULL, 0);
 	}
 
+	if (IS_COLD_RUN(vm)) {
+		J9InternalVMFunctions const * const vmFuncs = vm->internalVMFunctions;
+		vmFuncs->teardownJVMImage(vm);
+	}
+
 	if (NULL != vm->classMemorySegments) {
 		J9ClassWalkState classWalkState;
 		J9Class * clazz;
