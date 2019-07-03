@@ -4790,6 +4790,7 @@ typedef struct J9InternalVMFunctions {
 	void ( *deregisterClassLoader)(struct J9JavaVM* javaVM, struct J9ClassLoader* classLoader);
 	void ( *deregisterClass)(struct J9JavaVM* javaVM, struct J9Class* clazz);
 	void ( *deregisterCPEntry)(struct J9JavaVM* javaVM, struct J9ClassPathEntry* cpEntry);
+	void ( *teardownJVMImage)(struct J9JavaVM *javaVM);
 } J9InternalVMFunctions;
 
 /* Jazz 99339: define a new structure to replace JavaVM so as to pass J9NativeLibrary to JVMTIEnv  */

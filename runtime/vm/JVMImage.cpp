@@ -35,7 +35,7 @@ JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_heap(NULL)
 {
 	_dumpFileName = javaVM->ramStateFilePath;
-	_isWarmRun = J9_ARE_ALL_BITS_SET(javaVM->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN);
+	_isWarmRun = IS_WARM_RUN(javaVM);
 }
 
 JVMImage::~JVMImage()
@@ -361,13 +361,7 @@ JVMImage::writeImageToFile(void)
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-<<<<<<< HEAD
 	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways | EsOpenWrite, 0666);
-=======
-	omrthread_monitor_enter(_jvmImageMonitor);
-
-	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways, 0666);
->>>>>>> Updated the writing options
 	if (-1 == fileDescriptor) {
 		return false;
 	}
@@ -508,7 +502,7 @@ teardownJVMImage(J9JavaVM *javaVM)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 
-	if (IS_COLD_RUN(javaVM)) {
+	if (jvmImage->getIsColdRun()) {
 		jvmImage->writeImageToFile();
 	}
 }

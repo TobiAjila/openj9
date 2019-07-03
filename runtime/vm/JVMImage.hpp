@@ -94,6 +94,9 @@ public:
 	ImageTableHeader* getClassLoaderTable(void) { return WSRP_GET(_jvmImageHeader->classLoaderTable, ImageTableHeader*); }
 	ImageTableHeader* getClassTable(void) { return WSRP_GET(_jvmImageHeader->classTable, ImageTableHeader*); }
 	ImageTableHeader* getClassPathEntryTable(void) { return WSRP_GET(_jvmImageHeader->classPathEntryTable, ImageTableHeader*); }
+
+	bool getIsWarmRun() const { return _isWarmRun; }
+	bool getIsColdRun() const { return !_isWarmRun; }
 };
 
 #endif /* JVMIMAGE_H_ */
