@@ -640,8 +640,7 @@ freeJavaVM(J9JavaVM * vm)
 	}
 
 	if (IS_COLD_RUN(vm) || IS_WARM_RUN(vm)) {
-		J9InternalVMFunctions const * const vmFuncs = vm->internalVMFunctions;
-		vmFuncs->teardownJVMImage(vm);
+		teardownJVMImage(vm);
 	}
 
 	if (NULL != vm->classMemorySegments) {

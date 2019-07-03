@@ -379,5 +379,4 @@ J9InternalVMFunctions J9InternalFunctions = {
 	deregisterClassLoader,
 	deregisterClass,
 	deregisterCPEntry,
-	teardownJVMImage,
 };
