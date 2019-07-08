@@ -127,7 +127,7 @@ standardInit( J9JavaVM *vm, char *dllName)
 		}
 	}
 	/* Now create the classPathEntries */
-	if (initializeBootstrapClassPath(vm)) {
+	if (J9_ARE_NO_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN) && initializeBootstrapClassPath(vm)) {
 		goto _fail;
 	}
 #endif
