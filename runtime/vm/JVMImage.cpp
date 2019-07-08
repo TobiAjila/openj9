@@ -429,6 +429,14 @@ JVMImage::writeImageToFile(void)
 	return true;
 }
 
+void
+JVMImage::teardownImage(void)
+{
+	fixupClassLoaders();
+	fixupClasses();
+	writeImageToFile();
+}
+
 JVMImagePortLibrary * 
 setupJVMImagePortLibrary(J9JavaVM *javaVM)
 {
@@ -469,6 +477,7 @@ initializeJVMImage(J9JavaVM *javaVM)
 
 _error:
 	shutdownJVMImage(javaVM);
+	jvmImage->destroyMonitor();
 	return 0;
 }
 
@@ -554,7 +563,6 @@ shutdownJVMImage(J9JavaVM *javaVM)
 	if (NULL != jvmImage) {
 		PORT_ACCESS_FROM_JAVAVM(javaVM);
 
-		jvmImage->destroyMonitor();
 		jvmImage->~JVMImage();
 		j9mem_free_memory(jvmImage);
 		j9mem_free_memory(JVMIMAGEPORT_FROM_JAVAVM(javaVM));
@@ -563,12 +571,15 @@ shutdownJVMImage(J9JavaVM *javaVM)
 }
 
 extern "C" void
-teardownJVMImage(J9JavaVM *javaVM)
+teardownAndShutdownJVMImage(J9JavaVM *javaVM)
 {
+	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
+
 	if (IS_COLD_RUN(javaVM)) {
-		IMAGE_ACCESS_FROM_JAVAVM(javaVM);
-		jvmImage->writeImageToFile();
+		jvmImage->teardownImage();
 	}
+
+	shutdownJVMImage(javaVM);
 }
 
 extern "C" void *
