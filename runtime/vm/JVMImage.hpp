@@ -94,7 +94,7 @@ public:
 	void destroyMonitor(void);
 
 	/* TODO: currently the three major class loaders have their own accessors/mutators. This could be ported to hash table once user defined class works */
-	void setClassLoader(J9ClassLoader* classLoader, uint32_t classLoaderCategory);
+	void setClassLoader(J9ClassLoader *classLoader, uint32_t classLoaderCategory);
 	J9ClassLoader* getSystemClassLoader(void) { return WSRP_GET(_jvmImageHeader->systemClassLoader, J9ClassLoader*); }
 	J9ClassLoader* getApplicationClassLoader(void) { return WSRP_GET(_jvmImageHeader->appClassLoader, J9ClassLoader*); }
 	J9ClassLoader* getExtensionClassLoader(void) { return WSRP_GET(_jvmImageHeader->extensionClassLoader, J9ClassLoader*); }

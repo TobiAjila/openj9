@@ -67,7 +67,7 @@ UDATA initializeJVMImage(J9JavaVM *javaVM);
 * @param classLoader[in] J9ClassLoader to register
 * @param classLoaderCategory[in] category to identify the type of classloader
 */
-void registerClassLoader(J9JavaVM* javaVM, J9ClassLoader* classLoader, uint32_t classLoaderCategory);
+void registerClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader, uint32_t classLoaderCategory);
 
 /*
 * Registers class in table
@@ -108,7 +108,7 @@ void deregisterCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 * 
 * @return the starting element in the table. NULL if empty
 */
-void* imageTableStartDo(ImageTableHeader* table);
+void* imageTableStartDo(ImageTableHeader *table);
 
 /*
 * Next element in table
@@ -117,7 +117,7 @@ void* imageTableStartDo(ImageTableHeader* table);
 *
 * @return the next element in the table. NULL if no next element
 */
-void* imageTableNextDo(ImageTableHeader* table);
+void* imageTableNextDo(ImageTableHeader *table);
 
 /*
 * Checks table for entry location
@@ -127,7 +127,7 @@ void* imageTableNextDo(ImageTableHeader* table);
 *
 * @return location of entry in table. NULL if entry not in table
 */
-UDATA* findEntryLocationInTable(ImageTableHeader* table, UDATA entry);
+UDATA* findEntryLocationInTable(ImageTableHeader *table, UDATA entry);
 
 /*
 * Finding class loader based on category
@@ -135,7 +135,7 @@ UDATA* findEntryLocationInTable(ImageTableHeader* table, UDATA entry);
 * @param javaVM[in] the java vm
 * @param classLoaderCategory[in] the category of class loaders
 */
-J9ClassLoader* findClassLoader(J9JavaVM* javaVM, uint32_t classLoaderCategory);
+J9ClassLoader* findClassLoader(J9JavaVM *javaVM, uint32_t classLoaderCategory);
 
 /*
 * Shut down sequence of JVMImage

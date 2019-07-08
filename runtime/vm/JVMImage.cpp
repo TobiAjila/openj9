@@ -301,7 +301,7 @@ JVMImage::deregisterEntryInTable(ImageTableHeader *table, UDATA entry)
 }
 
 void
-JVMImage::setClassLoader(J9ClassLoader* classLoader, uint32_t classLoaderCategory)
+JVMImage::setClassLoader(J9ClassLoader *classLoader, uint32_t classLoaderCategory)
 {
 	/* TODO: Function will change when hash table is created and there would be no need for setting specific class loaders */
 	if (IS_SYSTEM_CLASSLOADER_CATEGORY(classLoaderCategory)) {
@@ -320,7 +320,7 @@ JVMImage::setClassLoader(J9ClassLoader* classLoader, uint32_t classLoaderCategor
 void
 JVMImage::fixupClassLoaders(void)
 {
-	J9ClassLoader *currentClassLoader = (J9ClassLoader *)imageTableStartDo(getClassLoaderTable());
+	J9ClassLoader *currentClassLoader = (J9ClassLoader *) imageTableStartDo(getClassLoaderTable());
 	
 	while (NULL != currentClassLoader) {
 		currentClassLoader->sharedLibraries = NULL;
@@ -335,14 +335,14 @@ JVMImage::fixupClassLoaders(void)
 		currentClassLoader->jniRedirectionBlocks = NULL;
 		currentClassLoader->gcRememberedSet = 0;
 
-		currentClassLoader = (J9ClassLoader*) imageTableNextDo(getClassLoaderTable());
+		currentClassLoader = (J9ClassLoader *) imageTableNextDo(getClassLoaderTable());
 	}
 }
 
 void
 JVMImage::fixupClasses(void)
 {
-	J9Class* currentClass = (J9Class*)imageTableStartDo(getClassTable());
+	J9Class *currentClass = (J9Class *) imageTableStartDo(getClassTable());
 
 	while (NULL != currentClass) {
 		currentClass->classObject = NULL;
@@ -365,7 +365,8 @@ JVMImage::fixupClasses(void)
 		currentClass->methodTypes = NULL;
 		currentClass->varHandleMethodTypes = NULL;
 		currentClass->gcLink = NULL;
-		currentClass = (J9Class*)imageTableNextDo(getClassTable());
+
+		currentClass = (J9Class *) imageTableNextDo(getClassTable());
 	}
 }
 

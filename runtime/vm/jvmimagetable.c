@@ -3,7 +3,7 @@
 #include "j9protos.h"
 
 void * 
-imageTableStartDo(ImageTableHeader* table)
+imageTableStartDo(ImageTableHeader *table)
 {
 	if (table->tableSize == 0) {
 		return NULL;
@@ -14,7 +14,7 @@ imageTableStartDo(ImageTableHeader* table)
 }
 
 void *
-imageTableNextDo(ImageTableHeader* table)
+imageTableNextDo(ImageTableHeader *table)
 {
 	UDATA *tail = WSRP_GET(table->tableHead, UDATA*);
 	if (table->iteratorPtr == tail) {
@@ -26,10 +26,10 @@ imageTableNextDo(ImageTableHeader* table)
 }
 
 UDATA * 
-findEntryLocationInTable(ImageTableHeader* table, UDATA entry)
+findEntryLocationInTable(ImageTableHeader *table, UDATA entry)
 {
-	UDATA* tail = WSRP_GET(table->tableTail, UDATA*);
-	UDATA* head = WSRP_GET(table->tableHead, UDATA*);
+	UDATA *tail = WSRP_GET(table->tableTail, UDATA*);
+	UDATA *head = WSRP_GET(table->tableHead, UDATA*);
 
 	while (tail >= head) {
 		if (*tail == entry) {
