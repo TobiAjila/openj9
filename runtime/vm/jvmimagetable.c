@@ -16,7 +16,7 @@ imageTableStartDo(ImageTableHeader *table)
 void *
 imageTableNextDo(ImageTableHeader *table)
 {
-	UDATA *tail = WSRP_GET(table->tableHead, UDATA*);
+	UDATA *tail = WSRP_GET(table->tableTail, UDATA*);
 	if (table->iteratorPtr == tail) {
 		return NULL;
 	}
