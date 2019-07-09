@@ -395,7 +395,7 @@ JVMImage::readImageFromFile(void)
 	_jvmImageHeader = (JVMImageHeader *)mmap(
 		(void *)imageHeaderBuffer.imageAlignedAddress,
 		imageHeaderBuffer.imageSize,
-		PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fileDescriptor, 0);
+		PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED, fileDescriptor, 0);
 	_heap = (J9Heap *)(_jvmImageHeader + 1);
 
 	omrfile_close(fileDescriptor);
