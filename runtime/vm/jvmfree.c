@@ -70,12 +70,7 @@ freeClassLoaderEntries(J9VMThread * vmThread, J9ClassPathEntry * entries, UDATA 
 			/* If there is a J9ZipFile allocated -- free it too */
 			case CPE_TYPE_JAR:
 				dynLoadBuffers->closeZipFileFunction(&vm->vmInterface, (void *) (cpEntry->extraInfo));
-				if (IS_COLD_RUN(vm)) {
-					imem_free_memory(cpEntry->extraInfo);
-				}
-				else {
-					j9mem_free_memory(cpEntry->extraInfo);
-				}
+				j9mem_free_memory(cpEntry->extraInfo);
 				break;
 #endif
 			case CPE_TYPE_JIMAGE:

@@ -1369,7 +1369,6 @@ IDATA
 initializeClassPathEntry (J9JavaVM * javaVM, J9ClassPathEntry *cpEntry)
 {
 	PORT_ACCESS_FROM_JAVAVM(javaVM);
-	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
 	int32_t attr = 0;
 
 	/* If we know what it is, then go for it */
@@ -1410,11 +1409,7 @@ initializeClassPathEntry (J9JavaVM * javaVM, J9ClassPathEntry *cpEntry)
 		VMIZipFile *zipFile = NULL;
 
 		cpEntry->extraInfo = NULL;
-		if (IS_COLD_RUN(javaVM)) {
-			zipFile = imem_allocate_memory((UDATA) sizeof(*zipFile), J9MEM_CATEGORY_CLASSES);
-		} else {
-			zipFile = j9mem_allocate_memory((UDATA) sizeof(*zipFile), J9MEM_CATEGORY_CLASSES);
-		}
+		zipFile = j9mem_allocate_memory((UDATA) sizeof(*zipFile), J9MEM_CATEGORY_CLASSES);
 		
 		if (NULL != zipFile) {
 			I_32 rc = 0;
@@ -1429,12 +1424,7 @@ initializeClassPathEntry (J9JavaVM * javaVM, J9ClassPathEntry *cpEntry)
 				return CPE_TYPE_JAR;
 			} else {
 				Trc_VM_initializeClassPathEntry_loadZipFailed(cpEntry->pathLength, cpEntry->path, rc);
-				if (IS_COLD_RUN(javaVM)) {
-					imem_free_memory(zipFile);
-				}
-				else {
-					j9mem_free_memory(zipFile);
-				}
+				j9mem_free_memory(zipFile);
 			}
 		}
 	}
