@@ -148,6 +148,8 @@ void freeMemorySegment(J9JavaVM *javaVM, J9MemorySegment *segment, BOOLEAN freeD
 					j9mem_free_memory(segment->baseAddress);
 				}
 			}
+		} else if ((segment->type & MEMORY_TYPE_ROM_CLASS) && IS_COLD_RUN(javaVM)) {
+			imem_free_memory(segment->baseAddress);
 		} else {
 			j9mem_free_memory(segment->baseAddress);
 		}
@@ -258,6 +260,8 @@ allocateMemoryForSegment(J9JavaVM *javaVM,J9MemorySegment *segment, J9PortVmemPa
 				tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
 			}
 		}
+	} else if (J9_ARE_ALL_BITS_SET(segment->type, MEMORY_TYPE_RAM_CLASS) && IS_COLD_RUN(javaVM)) {
+		tmpAddr = imem_allocate_memory(segment->size, memoryCategory);
 	} else {
 		tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
 	}
@@ -444,15 +448,29 @@ J9MemorySegmentList *allocateMemorySegmentListWithSize(J9JavaVM * javaVM, U_32 n
 {
 	J9MemorySegmentList *segmentList;
 	PORT_ACCESS_FROM_JAVAVM(javaVM);
-
-	if (NULL == (segmentList = j9mem_allocate_memory(sizeof(J9MemorySegmentList), memoryCategory)))
+	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
+	
+	/* Check if its a cold run and class memory segments list */
+	if (IS_COLD_RUN(javaVM) && J9MEM_CATEGORY_CLASSES == memoryCategory) {
+		if (NULL == (segmentList = imem_allocate_memory(sizeof(J9MemorySegmentList), memoryCategory))) {
+			return NULL;
+		}
+		segmentList->segmentPool = pool_new(sizeOfElements, numberOfMemorySegments, 0, 0, J9_GET_CALLSITE(), memoryCategory, POOL_FOR_PORT(IMAGE_OMRPORT_FROM_JAVAVM(javaVM)));
+		if (!(segmentList->segmentPool)) {
+			imem_free_memory(segmentList);
+			return NULL;
+		}
+	} else if (NULL == (segmentList = j9mem_allocate_memory(sizeof(J9MemorySegmentList), memoryCategory))) {
 		return NULL;
-
-	segmentList->segmentPool = pool_new(sizeOfElements, numberOfMemorySegments, 0, 0, J9_GET_CALLSITE(), memoryCategory, POOL_FOR_PORT(PORTLIB));
-	if (!(segmentList->segmentPool)) {
-		j9mem_free_memory(segmentList);
-		return NULL;
+	} else {
+		segmentList->segmentPool = pool_new(sizeOfElements, numberOfMemorySegments, 0, 0, J9_GET_CALLSITE(), memoryCategory, POOL_FOR_PORT(PORTLIB));
+		if (!(segmentList->segmentPool)) {
+			j9mem_free_memory(segmentList);
+			return NULL;
+		}
 	}
+
+	
 	segmentList->nextSegment = NULL;
 	segmentList->totalSegmentSize = 0;
 	segmentList->flags = 0;

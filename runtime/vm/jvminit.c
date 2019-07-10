@@ -2089,11 +2089,6 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 
 			if (NULL == (vm->jniWeakGlobalReferences = pool_new(sizeof(UDATA), 0, 0, POOL_NO_ZERO, J9_GET_CALLSITE(), J9MEM_CATEGORY_JNI, POOL_FOR_PORT(vm->portLibrary))))
 				goto _error;
-			
-			if (J9_ARE_ANY_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN | J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN)
-				&& 0 == initializeJVMImage(vm)) {
-				goto _error;
-			}
 
 			/* TODO: Load if Warm run */
 			if (IS_COLD_RUN(vm)) {
@@ -5968,6 +5963,11 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 
 	if (JNI_OK != (stageRC = runInitializationStage(vm, VM_THREADING_INITIALIZED))) {
+		goto error;
+	}
+
+	if (J9_ARE_ANY_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN | J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN)
+		&& 0 == initializeJVMImage(vm)) {
 		goto error;
 	}
 
