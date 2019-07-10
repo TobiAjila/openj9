@@ -4769,7 +4769,6 @@ typedef struct J9InternalVMFunctions {
 	U_32 ( *getVMRuntimeState)(struct J9JavaVM *vm);
 	BOOLEAN ( *updateVMRuntimeState)(struct J9JavaVM *vm, U_32 newState);
 	U_32 ( *getVMMinIdleWaitTime)(struct J9JavaVM *vm);
-	void ( *registerCPEntry)(struct J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 #if defined(J9VM_RAS_EYECATCHERS)
 	void ( *rasSetServiceLevel)(struct J9JavaVM *vm, const char *runtimeVersion);
 #endif /* J9VM_RAS_EYECATCHERS */
@@ -4785,6 +4784,7 @@ typedef struct J9InternalVMFunctions {
 	void ( *setNestmatesError)(struct J9VMThread *vmThread, struct J9Class *nestMember, struct J9Class *nestHost, IDATA errorCode);
 #endif /* J9VM_OPT_VALHALLA_NESTMATES */
 	BOOLEAN ( *areValueTypesEnabled)(struct J9JavaVM *vm);
+	void ( *registerCPEntry)(struct J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 } J9InternalVMFunctions;
 
 /* Jazz 99339: define a new structure to replace JavaVM so as to pass J9NativeLibrary to JVMTIEnv  */
