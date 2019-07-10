@@ -71,6 +71,7 @@ private:
 
 	void fixupClassLoaders(void);
 	void fixupClasses(void);
+	void fixupClassPathEntries(void);
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }
 public:

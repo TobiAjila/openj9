@@ -1345,6 +1345,9 @@ initializeClassPath(J9JavaVM *vm, char *classPath, U_8 classPathSeparator, U_16 
 						initializeClassPathEntry(vm, cpEntry);
 					}
 					cpPathMemory += (cpEntry->pathLength + 1);
+					if (IS_COLD_RUN(vm)) {
+						registerCPEntry(vm, cpEntry);
+					}
 					cpEntry++;
 					i++;
 				}

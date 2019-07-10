@@ -359,6 +359,19 @@ JVMImage::fixupClasses(void)
 	}
 }
 
+void
+JVMImage::fixupClassPathEntries(void)
+{
+	J9ClassPathEntry *currentCPEntry = (J9ClassPathEntry *) imageTableStartDo(getClassPathEntryTable());
+
+	while (NULL != currentCPEntry) {
+		currentCPEntry->type = CPE_TYPE_UNKNOWN;
+		currentCPEntry->status = 0;
+
+		currentCPEntry = (J9ClassPathEntry *) imageTableNextDo(getClassPathEntryTable());
+	}
+}
+
 bool
 JVMImage::readImageFromFile(void)
 {
@@ -424,6 +437,7 @@ JVMImage::teardownImage(void)
 {
 	fixupClassLoaders();
 	fixupClasses();
+	fixupClassPathEntries();
 	writeImageToFile();
 }
 
