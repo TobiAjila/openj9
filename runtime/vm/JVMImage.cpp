@@ -346,19 +346,8 @@ JVMImage::fixupClasses(void)
 
 	while (NULL != currentClass) {
 		currentClass->classObject = NULL;
-		currentClass->initializeStatus = J9ClassInitUnverified;
-		J9ROMClass* romClass = currentClass->romClass;
-		if (romClass->romMethodCount != 0) {
-			UDATA i;
-			UDATA count = romClass->romMethodCount;
-			J9Method* ramMethod = currentClass->ramMethods;
-			for (i = 0; i < count; i++) {
-				initializeMethodRunAddress(_vm->mainThread, ramMethod);
-				ramMethod->bytecodes = NULL;
-				ramMethod++;
-			}
-		}
-		currentClass->iTable = NULL;
+		currentClass->initializeStatus = J9ClassInitNotInitialized;
+		internalRunPreInitInstructions(currentClass, _vm->mainThread);
 		currentClass->jniIDs = NULL;
 		currentClass->replacedClass = NULL;
 		currentClass->callSites = NULL;
