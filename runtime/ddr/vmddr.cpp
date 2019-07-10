@@ -42,9 +42,11 @@ VM_DdrDebugLink(J9JITFrame)
 VM_DdrDebugLink(J9JITHashTable)
 VM_DdrDebugLink(J9JITStackAtlas)
 VM_DdrDebugLink(J9Object)
-VM_DdrDebugLink(J9NonIndexableObject)
-VM_DdrDebugLink(J9NonIndexableObjectCompressed)
-VM_DdrDebugLink(J9NonIndexableObjectFull)
+VM_DdrDebugLink(J9ObjectCompressed)
+VM_DdrDebugLink(J9ObjectFull)
+VM_DdrDebugLink(J9Object)
+VM_DdrDebugLink(J9ObjectCompressed)
+VM_DdrDebugLink(J9ObjectFull)
 VM_DdrDebugLink(J9IndexableObject)
 VM_DdrDebugLink(J9IndexableObjectContiguous)
 VM_DdrDebugLink(J9IndexableObjectContiguousCompressed)
@@ -60,3 +62,20 @@ VM_DdrDebugLink(J9ROMConstantDynamicRef)
 VM_DdrDebugLink(J9SFStackFrame)
 VM_DdrDebugLink(J9SRPHashTable)
 VM_DdrDebugLink(J9VMPopFramesInterruptEvent)
+
+
+/* Declare these for compatibility with the old DTFJ plugin, see https://github.com/eclipse/openj9/issues/6316 */
+/* @ddr_namespace: map_to_type=J9Consts */
+
+#define J9_JAVA_CLASS_ARRAY J9AccClassArray
+#define J9_JAVA_CLASS_REFERENCE_MASK J9AccClassReferenceMask
+#define J9_JAVA_CLASS_GC_SPECIAL J9AccClassGCSpecial
+#define J9_JAVA_CLASS_RAM_SHAPE_SHIFT J9AccClassRAMShapeShift
+#define J9_JAVA_STATIC J9AccStatic
+#define J9_JAVA_CLASS_RAM_ARRAY J9AccClassRAMArray
+#define J9_JAVA_INTERFACE J9AccInterface
+#define J9_JAVA_CLASS_DEPTH_MASK J9AccClassDepthMask
+#define J9_JAVA_CLASS_HOT_SWAPPED_OUT J9AccClassHotSwappedOut
+#define J9_JAVA_INTERFACE J9AccInterface
+#define J9_JAVA_CLASS_DYING J9AccClassDying
+#define J9_JAVA_NATIVE J9AccNative

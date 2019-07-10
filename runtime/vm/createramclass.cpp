@@ -2034,6 +2034,7 @@ internalCreateRAMClassFromROMClassImpl(J9VMThread *vmThread, J9ClassLoader *clas
 	UDATA packageID, J9Class *superclass, J9CreateRAMClassState *state, J9ClassLoader* hostClassLoader, J9Class *hostClass, J9Module *module)
 #endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
 {
+	UDATA const referenceSize = J9VMTHREAD_REFERENCE_SIZE(vmThread);
 	J9JavaVM *javaVM = vmThread->javaVM;
 	BOOLEAN retried = state->retry;
 	J9Class *ramClass = NULL;
@@ -2170,7 +2171,7 @@ fail:
 		} else {
 			static const UDATA highestBitInSlot = sizeof(UDATA) * 8 - 1;
 			/* add in my instanceShape size (0 if <= highestBitInSlot) */
-			UDATA temp = romWalkResult->totalInstanceSize / sizeof(fj9object_t);
+			UDATA temp = romWalkResult->totalInstanceSize / referenceSize;
 
 			if (temp > highestBitInSlot) {
 				/* reserve additional space for the instance description bits */
@@ -2373,19 +2374,19 @@ fail:
 			/* call sites fragment */
 			allocationRequests[RAM_CALL_SITES_FRAGMENT].prefixSize = 0;
 			allocationRequests[RAM_CALL_SITES_FRAGMENT].alignment = sizeof(UDATA);
-			allocationRequests[RAM_CALL_SITES_FRAGMENT].alignedSize = romClass->callSiteCount * sizeof(j9object_t);
+			allocationRequests[RAM_CALL_SITES_FRAGMENT].alignedSize = romClass->callSiteCount * sizeof(UDATA);
 			allocationRequests[RAM_CALL_SITES_FRAGMENT].address = NULL;
 
 			/* method types fragment */
 			allocationRequests[RAM_METHOD_TYPES_FRAGMENT].prefixSize = 0;
 			allocationRequests[RAM_METHOD_TYPES_FRAGMENT].alignment = sizeof(UDATA);
-			allocationRequests[RAM_METHOD_TYPES_FRAGMENT].alignedSize = romClass->methodTypeCount * sizeof(j9object_t);
+			allocationRequests[RAM_METHOD_TYPES_FRAGMENT].alignedSize = romClass->methodTypeCount * sizeof(UDATA);
 			allocationRequests[RAM_METHOD_TYPES_FRAGMENT].address = NULL;
 
 			/* varhandle method types fragment */
 			allocationRequests[RAM_VARHANDLE_METHOD_TYPES_FRAGMENT].prefixSize = 0;
 			allocationRequests[RAM_VARHANDLE_METHOD_TYPES_FRAGMENT].alignment = sizeof(UDATA);
-			allocationRequests[RAM_VARHANDLE_METHOD_TYPES_FRAGMENT].alignedSize = romClass->varHandleMethodTypeCount * sizeof(j9object_t);
+			allocationRequests[RAM_VARHANDLE_METHOD_TYPES_FRAGMENT].alignedSize = romClass->varHandleMethodTypeCount * sizeof(UDATA);
 			allocationRequests[RAM_VARHANDLE_METHOD_TYPES_FRAGMENT].address = NULL;
 
 			/* static split table fragment */
@@ -2691,6 +2692,10 @@ fail:
 					memcpy(ramClass->superclasses, superclass->superclasses, superclassCount * sizeof(UDATA));
 				}
 				ramClass->superclasses[superclassCount] = superclass;
+
+				/* Propagate self referencing field offsets from superclass (special treated during GC) - these take priority over self referencing fields of derived class*/
+				ramClass->selfReferencingField1 = superclass->selfReferencingField1;
+				ramClass->selfReferencingField2 = superclass->selfReferencingField2;
 			}
 			tempClassDepthAndFlags |= ((romClass->instanceShape & OBJECT_HEADER_SHAPE_MASK) << J9AccClassRAMShapeShift);
 			if (J9ROMCLASS_IS_ARRAY(romClass)) {
@@ -2882,7 +2887,7 @@ fail:
 					if (J9_ARE_ALL_BITS_SET(elementClass->classFlags, J9ClassLargestAlignmentConstraintDouble)) {
 						J9ARRAYCLASS_SET_STRIDE(ramClass, ROUND_UP_TO_POWEROF2(J9_VALUETYPE_FLATTENED_SIZE(elementClass), sizeof(U_64)));
 					} else if (J9_ARE_ALL_BITS_SET(elementClass->classFlags, J9ClassLargestAlignmentConstraintReference)) {
-						J9ARRAYCLASS_SET_STRIDE(ramClass, ROUND_UP_TO_POWEROF2(J9_VALUETYPE_FLATTENED_SIZE(elementClass), sizeof(fj9object_t)));
+						J9ARRAYCLASS_SET_STRIDE(ramClass, ROUND_UP_TO_POWEROF2(J9_VALUETYPE_FLATTENED_SIZE(elementClass), referenceSize));
 					} else { /* VT only contains singles (int, short, etc) at this point */
 						J9ARRAYCLASS_SET_STRIDE(ramClass, J9_VALUETYPE_FLATTENED_SIZE(elementClass));
 					}
@@ -2930,6 +2935,7 @@ internalCreateRAMClassFromROMClass(J9VMThread *vmThread, J9ClassLoader *classLoa
 	J9FlattenedClassCache *flattenedClassCache = (J9FlattenedClassCache *) flattenedClassCacheBuffer;
 	PORT_ACCESS_FROM_VMC(vmThread);
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
+	J9InternalVMFunctions const * const vmFuncs = javaVM->internalVMFunctions;
 
 	/* if this is an anon class classLoader should be anonClassLoader */
 	if (J9_ARE_ALL_BITS_SET(options, J9_FINDCLASS_FLAG_ANON)) {
@@ -3127,6 +3133,9 @@ retry:
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
 
 		result->classFlags = classFlags;
+		if (IS_COLD_RUN(javaVM)) {
+			vmFuncs->registerClass(javaVM, result);
+		}
 	}
 
 	return result;

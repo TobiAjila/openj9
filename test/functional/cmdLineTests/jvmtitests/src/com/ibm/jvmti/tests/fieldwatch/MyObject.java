@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2014 IBM Corp. and others
+ * Copyright (c) 2019, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -20,35 +20,18 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#include "j9comp.h"
+package com.ibm.jvmti.tests.fieldwatch;
 
-I_32 k8sdiv(I_32 a, I_32 b)
-{
-	return(a / b);
+class MyObject {
+	static int staticIntField;
+	static long staticLongField;
+	static double staticDoubleField;
+	static float staticSingleField;
+	static Object staticObjField;
+
+	int instanceIntField;
+	long instanceLongField;
+	double instanceDoubleField;
+	float instanceSingleField;
+	Object instanceObjField;
 }
-
-I_32 k8srem( I_32 a, I_32 b)
-{
-	return(a % b);
-}
-
-U_32 k8udiv(U_32 a, U_32 b)
-{
-	return(a / b);
-}
-
-U_32 k8urem(U_32 a, U_32 b)
-{
-	return(a % b);
-}
-
-I_32 k8smul(I_32 a, I_32 b)
-{
-	return(a * b);
-}
-
-U_32 k8umul(U_32 a, U_32 b)
-{
-	return(a * b);
-}
-

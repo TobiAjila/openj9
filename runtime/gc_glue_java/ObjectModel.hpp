@@ -114,6 +114,7 @@ public:
 		SCAN_CLASSLOADER_OBJECT = 6,
 		SCAN_ATOMIC_MARKABLE_REFERENCE_OBJECT = 7,
 		SCAN_OWNABLESYNCHRONIZER_OBJECT = 8,
+		SCAN_MIXED_OBJECT_LINKED = 9
 	};
 
 	/**
@@ -159,7 +160,7 @@ private:
 	MMINLINE UDATA
 	getClassShape(J9Object *objectPtr)
 	{
-		J9Class* clazz = J9GC_J9OBJECT_CLAZZ(objectPtr);
+		J9Class* clazz = J9GC_J9OBJECT_CLAZZ(objectPtr, this);
 		return J9GC_CLASS_SHAPE(clazz);
 	}
 
@@ -179,7 +180,12 @@ public:
 		{
 			UDATA classFlags = J9CLASS_FLAGS(clazz) & (J9AccClassReferenceMask | J9AccClassGCSpecial | J9AccClassOwnableSynchronizer);
 			if (0 == classFlags) {
-				result = SCAN_MIXED_OBJECT;
+				/* TODO try an approach with a separate class flag */
+				if (0 != clazz->selfReferencingField1) {
+					result = SCAN_MIXED_OBJECT_LINKED;
+				} else {
+					result = SCAN_MIXED_OBJECT;
+				}
 			} else {
 				if (0 != (classFlags & J9AccClassReferenceMask)) {
 					result = SCAN_REFERENCE_MIXED_OBJECT;
@@ -214,7 +220,7 @@ public:
 	MMINLINE ScanType
 	getScanType(J9Object *objectPtr)
 	{
-		J9Class *clazz = J9GC_J9OBJECT_CLAZZ(objectPtr);
+		J9Class *clazz = J9GC_J9OBJECT_CLAZZ(objectPtr, this);
 		return getScanType(clazz);
 	}
 	
@@ -250,7 +256,7 @@ public:
 	MMINLINE bool
 	isObjectArray(J9Object *objectPtr)
 	{
-		J9Class* clazz = J9GC_J9OBJECT_CLAZZ(objectPtr);
+		J9Class* clazz = J9GC_J9OBJECT_CLAZZ(objectPtr, this);
 		return (OBJECT_HEADER_SHAPE_POINTERS == J9GC_CLASS_SHAPE(clazz));
 	}
 
@@ -709,7 +715,7 @@ public:
 	MMINLINE bool
 	isOverflowBitSet(J9Object *objectPtr)
 	{
-		return (GC_OVERFLOW == (J9GC_J9OBJECT_FLAGS_FROM_CLAZZ(objectPtr) & GC_OVERFLOW));
+		return (GC_OVERFLOW == (J9GC_J9OBJECT_FLAGS_FROM_CLAZZ(objectPtr, this) & GC_OVERFLOW));
 	}
 #endif /* defined(OMR_GC_REALTIME) */
 

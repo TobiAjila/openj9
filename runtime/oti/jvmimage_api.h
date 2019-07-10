@@ -69,12 +69,12 @@ UDATA initializeJVMImage(J9JavaVM *javaVM);
 void registerClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader);
 
 /*
-* Registers class segment in table
+* Registers class in table
 *
 * @param javaVM[in] the java vm
 * @param clazz[in] J9Class to register
 */
-void registerClassSegment(J9JavaVM *javaVM, J9Class *clazz);
+void registerClass(J9JavaVM *javaVM, J9Class *clazz);
 
 /*
 * Registers class path entry in table
@@ -93,12 +93,12 @@ void registerCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 void deregisterClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader);
 
 /*
-* Deregisters class segment from table
+* Deregisters class from table
 *
 * @param javaVM[in] the java vm
 * @param clazz[in] J9Class to register
 */
-void deregisterClassSegment(J9JavaVM *javaVM, J9Class *clazz);
+void deregisterClass(J9JavaVM *javaVM, J9Class *clazz);
 
 /*
 * Deregisters class path entry from table
@@ -112,9 +112,17 @@ void deregisterCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry);
 * Shut down sequence of JVMImage
 * Frees memory of heap variables and jvmimage instance
 *
-* @param javaVM[in] the java vm 
+* @param javaVM[in] the java vm
 */
 void shutdownJVMImage(J9JavaVM *vm);
+
+/*
+* Frees the memory associated with the JVMImage
+* If it is a cold run it will perform fixup and write the image to file
+*
+* @param javaVM[in] the java vm
+*/
+void teardownJVMImage(J9JavaVM *javaVM);
 
 #ifdef __cplusplus
 }

@@ -424,6 +424,9 @@ inlineVectorizedStringIndexOf(TR::Node* node, TR::CodeGenerator* cg, bool isUTF1
       generateRRRInstruction(cg, TR::InstOpCode::getSubtractThreeRegOpCode(), node, loadLenReg, s1LenReg, s1VecStartIndexReg);
       generateRIEInstruction(cg, TR::InstOpCode::getCmpImmBranchRelOpCode(), node, loadLenReg, (int8_t)vectorSize, labelLoadLen16, TR::InstOpCode::COND_BNL);
       generateRRRInstruction(cg, TR::InstOpCode::getAddThreeRegOpCode(), node, tmpReg, s1ValueReg, s1VecStartIndexReg);
+      // Needs -1 because VLL's third operand is the highest index to load.
+      // e.g. If the load length is 8 bytes, the highest index is 7. Hence, the need for -1.
+      generateRIInstruction(cg, TR::InstOpCode::getAddHalfWordImmOpCode(), node, loadLenReg, -1);
       generateVRSbInstruction(cg, TR::InstOpCode::VLL, node, s1PartialVReg, loadLenReg, generateS390MemoryReference(tmpReg, headerSize, cg));
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, labelLoadLenDone);
 
@@ -3008,41 +3011,6 @@ J9::Z::TreeEvaluator::arraylengthEvaluator(TR::Node *node, TR::CodeGenerator *cg
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// resolveCHKEvaluator - Resolve check a static, field or method. child 1 is reference
-//   to be resolved. Symbolref indicates failure action/destination
-///////////////////////////////////////////////////////////////////////////////////////
-   TR::Register *
-J9::Z::TreeEvaluator::resolveCHKEvaluator(TR::Node * node, TR::CodeGenerator * cg)
-   {
-   // No code is generated for the resolve check. The child will reference an
-   // unresolved symbol and all check handling is done via the corresponding
-   // snippet.
-   //
-   TR::Node * firstChild = node->getFirstChild();
-   bool fixRefCount = false;
-   if (cg->comp()->useCompressedPointers())
-      {
-      // for stores under ResolveCHKs, artificially bump
-      // down the reference count before evaluation (since stores
-      // return null as registers)
-      //
-      if (node->getFirstChild()->getOpCode().isStoreIndirect() &&
-            node->getFirstChild()->getReferenceCount() > 1)
-         {
-         node->getFirstChild()->decReferenceCount();
-         fixRefCount = true;
-         }
-      }
-   cg->evaluate(firstChild);
-   if (fixRefCount)
-      firstChild->incReferenceCount();
-
-   cg->decReferenceCount(firstChild);
-   return NULL;
-   }
-
-
-///////////////////////////////////////////////////////////////////////////////////////
 // DIVCHKEvaluator - Divide by zero check. child 1 is the divide. Symbolref indicates
 //    failure action/destination
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -3759,7 +3727,7 @@ J9::Z::TreeEvaluator::ArrayCopyBNDCHKEvaluator(TR::Node * node, TR::CodeGenerato
    }
 
 void
-J9::Z::TreeEvaluator::generateFillInDataBlockSequenceForUnresolvedField(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister)
+J9::Z::TreeEvaluator::generateFillInDataBlockSequenceForUnresolvedField(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *dataSnippetRegister)
    {
    TR::LabelSymbol *unresolvedLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *mergePointLabel = generateLabelSymbol(cg);
@@ -4016,7 +3984,7 @@ void generateReportFieldAccessOutlinedInstructions(TR::Node *node, TR::LabelSymb
    }
 
 void
-J9::Z::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *valueReg)
+J9::Z::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *valueReg, TR::Register *dataSnippetRegister)
    {
    bool isResolved = !node->getSymbolReference()->isUnresolved();
    TR::LabelSymbol *mergePointLabel = generateLabelSymbol(cg);
@@ -4066,7 +4034,7 @@ J9::Z::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGenera
          }
       }
    // First load the class flags into a register.
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, fieldClassFlags, generateS390MemoryReference(fieldClassReg, cg->comp()->fej9()->getOffsetOfClassFlags(), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, fieldClassFlags, generateS390MemoryReference(fieldClassReg, cg->comp()->fej9()->getOffsetOfClassFlags(), cg));
    // Then test the bit to test with the relevant flag to check if fieldwatch is enabled.
    generateRIInstruction(cg, TR::InstOpCode::TMLL, node, fieldClassFlags, J9ClassHasWatchedFields);
    // If Condition Code from above test is not 0, then we branch to OOL (instructions) to report the fieldwatch event. Otherwise fall through to mergePointLabel.
@@ -8908,59 +8876,6 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
-static bool
-inlineMathSQRT(TR::Node * node, TR::CodeGenerator * cg)
-   {
-   TR::Node * firstChild = node->getFirstChild();
-   TR::Register * targetRegister = NULL;
-   static char * nosupportSQRT = feGetEnv("TR_NOINLINESQRT");
-
-   if (NULL != nosupportSQRT)
-      {
-      return false;
-      }
-
-
-   // Calculate it for ourselves
-   if (firstChild->getOpCode().isLoadConst())
-      {
-      union { double valD; int64_t valI; } result;
-      targetRegister = cg->allocateRegister(TR_FPR);
-      result.valD = sqrt(firstChild->getDouble());
-      TR::S390ConstantDataSnippet * cds = cg->findOrCreate8ByteConstant(node, result.valI);
-      generateRXInstruction(cg, TR::InstOpCode::LD, node, targetRegister, generateS390MemoryReference(cds, cg, 0, node));
-      }
-   else
-      {
-      TR::Register * opRegister = NULL;
-
-      //See whether to use SQDB or SQDBR depending on how many times it is referenced
-      if (firstChild->isSingleRefUnevaluated() && firstChild->getOpCodeValue() == TR::dloadi)
-         {
-         targetRegister = cg->allocateRegister(TR_FPR);
-         generateRXEInstruction(cg, TR::InstOpCode::SQDB, node, targetRegister, generateS390MemoryReference(firstChild, cg), 0);
-         }
-      else
-         {
-         opRegister = cg->evaluate(firstChild);
-
-         if (cg->canClobberNodesRegister(firstChild))
-            {
-            targetRegister = opRegister;
-            }
-         else
-            {
-            targetRegister = cg->allocateRegister(TR_FPR);
-            }
-         generateRRInstruction(cg, TR::InstOpCode::SQDBR, node, targetRegister, opRegister);
-         }
-      }
-
-   node->setRegister(targetRegister);
-   cg->decReferenceCount(firstChild);
-   return true;
-   }
-
 static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
    static char *disable = feGetEnv("TR_disableInlineIsAssignableFrom");
@@ -9128,12 +9043,6 @@ J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::
       {
       switch (methodSymbol->getRecognizedMethod())
          {
-         case TR::java_lang_StrictMath_sqrt:
-         case TR::java_lang_Math_sqrt:
-            {
-            callWasInlined = inlineMathSQRT(node, cg);
-            break;
-            }
          case TR::java_lang_Class_isAssignableFrom:
             {
             callWasInlined = inlineIsAssignableFrom(node, cg);

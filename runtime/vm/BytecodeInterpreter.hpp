@@ -1055,7 +1055,17 @@ obj:;
 	VMINLINE j9object_t
 	allocateIndexableObject(REGISTER_ARGS_LIST, J9Class *arrayClass, U_32 size, bool initializeSlots = true, bool memoryBarrier = true, bool sizeCheck = true)
 	{
-		j9object_t instance = _objectAllocate.inlineAllocateIndexableObject(_currentThread, arrayClass, size, initializeSlots, memoryBarrier, sizeCheck);
+		j9object_t instance = NULL;
+
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
+		if (J9_IS_J9CLASS_FLATTENED(arrayClass)) {
+			instance = _objectAllocate.inlineAllocateIndexableValueTypeObject(_currentThread, arrayClass, (U_32)size, initializeSlots, memoryBarrier, sizeCheck);
+		} else
+#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
+		{
+			instance = _objectAllocate.inlineAllocateIndexableObject(_currentThread, arrayClass, (U_32)size, initializeSlots, memoryBarrier, sizeCheck);
+		}
+
 		if (NULL == instance) {
 			updateVMStruct(REGISTER_ARGS);
 			instance = _vm->memoryManagerFunctions->J9AllocateIndexableObject(_currentThread, arrayClass, size, J9_GC_ALLOCATE_OBJECT_NON_INSTRUMENTABLE);
@@ -3095,7 +3105,16 @@ done:
 		}
 		if (flags & J9AccClassArray) {
 			U_32 size = J9INDEXABLEOBJECT_SIZE(_currentThread, original);
-			copy = _objectAllocate.inlineAllocateIndexableObject(_currentThread, objectClass, size, false, false, false);
+
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
+			if (J9_IS_J9CLASS_FLATTENED(objectClass)) {
+				copy = _objectAllocate.inlineAllocateIndexableValueTypeObject(_currentThread, objectClass, size, false, false, false);
+			} else
+#endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
+			{
+				copy = _objectAllocate.inlineAllocateIndexableObject(_currentThread, objectClass, size, false, false, false);
+			}
+
 			if (NULL == copy) {
 				pushObjectInSpecialFrame(REGISTER_ARGS, original);
 				updateVMStruct(REGISTER_ARGS);
@@ -6419,7 +6438,8 @@ retry:
 #endif
 
 				{
-					UDATA const newValueOffset = valueOffset + J9_OBJECT_HEADER_SIZE;
+					UDATA const objectHeaderSize = J9VMTHREAD_OBJECT_HEADER_SIZE(_currentThread);
+					UDATA const newValueOffset = valueOffset + objectHeaderSize;
 					bool isVolatile = (0 != (flags & J9AccVolatile));
 
 					if (flags & J9FieldSizeDouble) {
@@ -6451,9 +6471,9 @@ retry:
 							_objectAccessBarrier.copyObjectFields(_currentThread,
 												flattenedFieldClass,
 												objectref,
-												cache->offset + J9_OBJECT_HEADER_SIZE,
+												cache->offset + objectHeaderSize,
 												newObjectRef,
-												J9_OBJECT_HEADER_SIZE);
+												objectHeaderSize);
 
 							_sp += (slotsToPop - 1);
 							*(j9object_t*)_sp = newObjectRef;
@@ -6555,8 +6575,9 @@ resolve:
 		}
 #endif
 		{
+			UDATA const objectHeaderSize = J9VMTHREAD_OBJECT_HEADER_SIZE(_currentThread);
 			bool isVolatile = (0 != (flags & J9AccVolatile));
-			UDATA const newValueOffset = valueOffset + J9_OBJECT_HEADER_SIZE;
+			UDATA const newValueOffset = valueOffset + objectHeaderSize;
 
 			if (flags & J9FieldSizeDouble) {
 				j9object_t objectref = *(j9object_t*)(_sp + 2);
@@ -6579,9 +6600,9 @@ resolve:
 					_objectAccessBarrier.copyObjectFields(_currentThread,
 										cache->clazz,
 										*(j9object_t*)_sp,
-										J9_OBJECT_HEADER_SIZE,
+										objectHeaderSize,
 										objectref,
-										cache->offset + J9_OBJECT_HEADER_SIZE);
+										cache->offset + objectHeaderSize);
 
 				} else
 #endif /* defined(J9VM_OPT_VALHALLA_VALUE_TYPES) */
@@ -7469,7 +7490,16 @@ retry:
 		if (J9_EXPECTED(NULL != resolvedClass)) {
 			J9Class *arrayClass = resolvedClass->arrayClass;
 			if (J9_EXPECTED(NULL != arrayClass)) {
-				j9object_t instance = _objectAllocate.inlineAllocateIndexableObject(_currentThread, arrayClass, (U_32)size);
+				j9object_t instance = NULL;
+#if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
+				if (J9_IS_J9CLASS_FLATTENED(arrayClass)) {
+					instance = _objectAllocate.inlineAllocateIndexableValueTypeObject(_currentThread, arrayClass, (U_32)size);
+				} else
+#endif /* J9VM_OPT_VALHALLA_VALUE_TYPES */
+				{
+					instance = _objectAllocate.inlineAllocateIndexableObject(_currentThread, arrayClass, (U_32)size);
+				}
+
 				if (NULL == instance) {
 					updateVMStruct(REGISTER_ARGS);
 					instance = _vm->memoryManagerFunctions->J9AllocateIndexableObject(_currentThread, arrayClass, (U_32)size, J9_GC_ALLOCATE_OBJECT_INSTRUMENTABLE);
@@ -8379,8 +8409,9 @@ retry:
 			_objectAccessBarrier.cloneObject(_currentThread, originalObjectRef, copyObjectRef, objectRefClass);
 		}
 		{
+			UDATA const objectHeaderSize = J9VMTHREAD_OBJECT_HEADER_SIZE(_currentThread);
 			bool const isVolatile = (0 != (flags & J9AccVolatile));
-			UDATA const newValueOffset = valueOffset + J9_OBJECT_HEADER_SIZE;
+			UDATA const newValueOffset = valueOffset + objectHeaderSize;
 
 			if (J9_ARE_ALL_BITS_SET(flags, J9FieldSizeDouble)) {
 				_objectAccessBarrier.inlineMixedObjectStoreU64(_currentThread, copyObjectRef, newValueOffset, *(U_64*)_sp, isVolatile);
@@ -8391,9 +8422,9 @@ retry:
 					_objectAccessBarrier.copyObjectFields(_currentThread,
 										cache->clazz,
 										*(j9object_t*)_sp,
-										J9_OBJECT_HEADER_SIZE,
+										objectHeaderSize,
 										copyObjectRef,
-										cache->offset + J9_OBJECT_HEADER_SIZE);
+										cache->offset + objectHeaderSize);
 				} else {
 					_objectAccessBarrier.inlineMixedObjectStoreObject(_currentThread, copyObjectRef, newValueOffset, *(j9object_t*)_sp, isVolatile);
 				}

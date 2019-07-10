@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corp. and others
+ * Copyright (c) 2019, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -20,30 +20,43 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-ARGS = ['SDK_VERSION', 'PLATFORM']
+/**
+ * @file legacyLibraryName.c
+ * @brief File is to be compiled into a shared library (legacyName).  All the symbols should
+ * be exported and visible for external invocations.
+ */
 
-SETUP_LABEL = params.SETUP_LABEL
-if (!SETUP_LABEL) {
-    SETUP_LABEL = 'worker'
+#include "jni.h"
+
+/**
+ * @brief Function indicates to the runtime that the library legacyLibraryName has been
+ * linked into the executable.
+ */
+jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+    return JNI_VERSION_1_8;
 }
 
-timeout(time: 10, unit: 'HOURS') {
-    timestamps {
-        node(SETUP_LABEL) {
-            try{
-                checkout scm
-                variableFile = load 'buildenv/jenkins/common/variables-functions'
-                variableFile.set_job_variables('build')
-                buildFile = load 'buildenv/jenkins/common/build'
-            } finally {
-                // disableDeferredWipeout also requires deleteDirs. See https://issues.jenkins-ci.org/browse/JENKINS-54225
-                cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
-            }
-        }
-    }
-    stage ('Queue') {
-        node("${NODE}") {
-            buildFile.build_all()
-        }
-    }
+/**
+ * @brief Function indicates an alternative to the traditional unload routine to
+ * the runtime specifically targeting the library legaclegacyLibraryNameyName.
+ */
+void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
+{
+    return;
+}
+
+/**
+ * @brief Provide an implementation for the class TestLoadLegacyLibrary's native method fooImpl.
+ * Package:     org.openj9.test.loadLibrary
+ * Class:       TestLoadLegacyLibrary
+ * Method:      fooImpl
+ * @param[in]   env The JNI env.
+ * @param[in]   instance The this pointer.
+ * @return      Always return value "true"
+ */
+jboolean JNICALL
+Java_j9vm_test_loadLibrary_TestLoadLegacyLibrary_fooImpl(JNIEnv *env, jobject this)
+{
+    return JNI_TRUE;
 }

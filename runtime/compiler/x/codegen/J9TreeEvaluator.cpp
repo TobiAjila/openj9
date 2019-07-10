@@ -2075,36 +2075,6 @@ TR::Register *J9::X86::TreeEvaluator::resolveAndNULLCHKEvaluator(TR::Node *node,
    return TR::TreeEvaluator::evaluateNULLCHKWithPossibleResolve(node, true, cg);
    }
 
-TR::Register *J9::X86::TreeEvaluator::resolveCHKEvaluator(TR::Node *node, TR::CodeGenerator *cg)
-   {
-   // No code is generated for the resolve check. The child will reference an
-   // unresolved symbol and all check handling is done via the corresponding
-   // snippet.
-   //
-   TR::Node *firstChild = node->getFirstChild();
-   TR::Compilation *comp = cg->comp();
-   bool fixRefCount = false;
-   if (comp->useCompressedPointers())
-      {
-      // for stores under ResolveCHKs, artificially bump
-      // down the reference count before evaluation (since stores
-      // return null as registers)
-      //
-      if (node->getFirstChild()->getOpCode().isStoreIndirect() &&
-            node->getFirstChild()->getReferenceCount() > 1)
-         {
-         node->getFirstChild()->decReferenceCount();
-         fixRefCount = true;
-         }
-      }
-   cg->evaluate(firstChild);
-   if (fixRefCount)
-      firstChild->incReferenceCount();
-
-   cg->decReferenceCount(firstChild);
-   return NULL;
-   }
-
 
 // Generate explicit checks for division by zero and division
 // overflow (i.e. 0x80000000 / 0xFFFFFFFF), if necessary.
@@ -8978,115 +8948,6 @@ inlineNanoTime(
 #endif
 #endif // LINUX
 
-static bool
-inlineMathSQRT(
-      TR::Node *node,
-      TR::CodeGenerator *cg)
-   {
-   // Sometimes the call can have 2 children, where the first one is loadaddr
-   TR::Node *operand = NULL;
-   TR::Node *firstChild = NULL;
-   TR::Register *targetRegister = NULL;
-
-   if (node->getNumChildren() == 1)
-      {
-      operand = node->getFirstChild();
-      }
-   else
-      {
-      firstChild = node->getFirstChild();
-      operand    = node->getSecondChild();
-      }
-
-   if (node->getReferenceCount()==1)
-      {
-      if (firstChild)
-         cg->recursivelyDecReferenceCount(firstChild);
-
-      cg->recursivelyDecReferenceCount(operand);
-      return true;
-      }
-
-
-   // The current Neutrino sqrt() runtime function does not always return
-   // a result in the expected precision.  Hence, do not fold constants
-   // at compile time.
-   //
-   // TODO: Instead of avoiding it altogether the preferred fix is to call
-   // the fdlibm version of sqrt (involves linking in the fdlibm library).
-   //
-   if (operand->getOpCode().isLoadConst())
-      {
-      union
-         {
-         struct
-            {
-            uint32_t lower;
-            uint32_t upper;
-            } s;
-         double   doubleVal;
-         int64_t  rawBits;
-         } d;
-
-      d.doubleVal = operand->getDouble();
-
-      // Do not assume that the C runtime will return the correct values that Java requires
-      // for a j/l/Math.sqrt() call.  Provide the correct values for the special cases.
-      //
-      if (d.s.upper & 0x80000000)
-         {
-         if (d.s.upper != 0x80000000 || d.s.lower != 0x00000000)
-            {
-            // -ve number other than -0.0 returns NaN.
-            // -0.0 returns -0.0.
-            //
-            d.s.lower = 0;
-            d.s.upper = 0x7ff80000;
-            }
-         }
-      else if (! ((d.s.lower == 0) && (d.s.upper == 0 || d.s.upper == 0x7ff00000 || d.s.upper == 0x7ff80000)))
-         {
-         // +0.0 or +INF or NaN returns the argument.
-         // Anything else can be computed from the sqrt() function.
-         //
-         d.doubleVal = sqrt(d.doubleVal);
-         }
-
-      auto cds = cg->findOrCreate8ByteConstant(operand, d.rawBits);
-
-      targetRegister = cg->allocateRegister(TR_FPR);
-      generateRegMemInstruction(MOVSDRegMem, node, targetRegister, generateX86MemoryReference(cds, cg), cg);
-      }
-   else
-      {
-      TR::Register *opRegister = NULL;
-      opRegister = cg->evaluate(operand);
-
-      if (opRegister->getKind() == TR_FPR)
-         {
-         if (operand->getReferenceCount()==1)
-            targetRegister = opRegister;
-         else
-            targetRegister = cg->allocateRegister(TR_FPR);
-
-         generateRegRegInstruction(SQRTSDRegReg, node, targetRegister, opRegister, cg);
-         }
-      else
-         {
-         targetRegister = cg->doubleClobberEvaluate(operand);
-         generateFPRegInstruction(DSQRTReg, node, targetRegister, cg);
-         }
-      }
-
-   node->setRegister(targetRegister);
-   if (firstChild)
-      cg->recursivelyDecReferenceCount(firstChild);
-
-   cg->decReferenceCount(operand);
-   return true;
-
-   }
-
 // Convert serial String.hashCode computation into vectorization copy and implement with SSE instruction
 //
 // Conversion process example:
@@ -10038,11 +9899,6 @@ bool J9::X86::TreeEvaluator::VMinlineCallEvaluator(
             }
             break;
 
-         case TR::java_lang_Math_sqrt:
-         case TR::java_lang_StrictMath_sqrt:
-            {
-            return inlineMathSQRT(node, cg);
-            }
 
          case TR::java_lang_Long_reverseBytes:
          case TR::java_lang_Integer_reverseBytes:
@@ -12431,6 +12287,9 @@ J9::X86::TreeEvaluator::andORStringEvaluator(TR::Node *node, TR::CodeGenerator *
    }
 
 /*
+ *
+ * Generates instructions to fill in the J9JITWatchedStaticFieldData.fieldAddress, J9JITWatchedStaticFieldData.fieldClass for static fields,
+ * and J9JITWatchedInstanceFieldData.offset for instance fields at runtime. Used for fieldwatch support.
  * Fill in the J9JITWatchedStaticFieldData.fieldAddress, J9JITWatchedStaticFieldData.fieldClass for static field
  * and J9JITWatchedInstanceFieldData.offset for instance field
  *
@@ -12446,7 +12305,7 @@ J9::X86::TreeEvaluator::andORStringEvaluator(TR::Node *node, TR::CodeGenerator *
  * jmp restartLabel
  */
 void
-J9::X86::TreeEvaluator::generateFillInDataBlockSequenceForUnresolvedField (TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister)
+J9::X86::TreeEvaluator::generateFillInDataBlockSequenceForUnresolvedField (TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *dataSnippetRegister)
    {
    TR::SymbolReference *symRef = node->getSymbolReference();
    bool is64Bit = TR::Compiler->target.is64Bit();
@@ -12711,7 +12570,7 @@ static uint8_t getNumOfConditionsForReportFieldAccess(TR::Node *node, bool isRes
    }
 
 void
-J9::X86::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *valueReg)
+J9::X86::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGenerator *cg, TR::Node *node, TR::Snippet *dataSnippet, bool isWrite, TR::Register *sideEffectRegister, TR::Register *valueReg, TR::Register *dataSnippetRegister)
    {
    bool isResolved = !node->getSymbolReference()->isUnresolved();
    TR::LabelSymbol* startLabel = generateLabelSymbol(cg);
@@ -12757,10 +12616,14 @@ J9::X86::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGene
          }
       else
          {
-         fieldClassReg = cg->allocateRegister();
          if (isWrite)
             {
+            fieldClassReg = cg->allocateRegister();
             generateRegMemInstruction(LRegMem(), node, fieldClassReg, generateX86MemoryReference(sideEffectRegister, fej9->getOffsetOfClassFromJavaLangClassField(), cg), cg);
+            }
+         else
+            {
+            fieldClassReg = sideEffectRegister;
             }
          classFlagsMemRef = generateX86MemoryReference(fieldClassReg, fej9->getOffsetOfClassFlags(), cg);
          }
@@ -12784,7 +12647,7 @@ J9::X86::TreeEvaluator::generateTestAndReportFieldWatchInstructions(TR::CodeGene
    deps->stopAddingConditions();
    generateLabelInstruction(LABEL, node, endLabel, deps, cg);
 
-   if (isInstanceField || (!isResolved) || isAOTCompile)
+   if (isInstanceField || (!isResolved && isWrite) || isAOTCompile)
       {
       cg->stopUsingRegister(fieldClassReg);
       }
