@@ -397,11 +397,13 @@ internalInitializeJavaLangClassLoader(JNIEnv * env)
 
 		/* set app class loader if warm run */
 		if (IS_WARM_RUN(vm)) {
-			vm->applicationClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_APP_CLASSLOADER);
+			vm->applicationClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_APP_CLASSLOADER);	
 		}
 		/* fall back on allocation if find fails */
 		if (NULL == vm->applicationClassLoader) {
 			vm->applicationClassLoader = (void*)(UDATA)(vmFuncs->internalAllocateClassLoader(vm, J9_JNI_UNWRAP_REFERENCE(appClassLoader)));
+		} else {
+			vmFuncs->initializeImageClassLoaderObject(vm, vm->applicationClassLoader, J9_JNI_UNWRAP_REFERENCE(appClassLoader));
 		}
 		
 		if (NULL != vmThread->currentException) {
@@ -432,10 +434,14 @@ internalInitializeJavaLangClassLoader(JNIEnv * env)
 			if (IS_WARM_RUN(vm)) {
 				vm->extensionClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_EXTENSION_CLASSLOADER);
 			}
+
 			/* fall back on allocation if find fails */
 			if (NULL == vm->extensionClassLoader) {
 				vm->extensionClassLoader = (void*)(UDATA)(vmFuncs->internalAllocateClassLoader(vm, classLoaderObject));
+			} else {
+				vmFuncs->initializeImageClassLoaderObject(vm, vm->extensionClassLoader, classLoaderObject);
 			}
+
 			if (NULL != vmThread->currentException) {
 				/* while this exception check and return statement seem un-necessary, it is added to prevent
 				 * oversights if anybody adds more code in the future.

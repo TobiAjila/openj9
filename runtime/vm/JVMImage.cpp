@@ -343,6 +343,8 @@ JVMImage::fixupClassLoaders(void)
 	
 	while (NULL != currentClassLoader) {
 		currentClassLoader->sharedLibraries = NULL;
+		currentClassLoader->librariesHead = NULL;
+		currentClassLoader->librariesTail = NULL;
 		currentClassLoader->classLoaderObject = NULL;
 		currentClassLoader->unloadLink = NULL;
 		currentClassLoader->gcLinkNext = NULL;
@@ -364,15 +366,13 @@ JVMImage::fixupClasses(void)
 	J9Class *currentClass = (J9Class *) imageTableStartDo(getClassTable());
 
 	while (NULL != currentClass) {
-		currentClass->classObject = NULL;
-		currentClass->initializeStatus = J9ClassInitNotInitialized;
-		internalRunPreInitInstructions(currentClass, _vm->mainThread);
-		currentClass->jniIDs = NULL;
-		currentClass->replacedClass = NULL;
-		currentClass->callSites = NULL;
-		currentClass->methodTypes = NULL;
-		currentClass->varHandleMethodTypes = NULL;
-		currentClass->gcLink = NULL;
+		J9ROMClass *romClass = currentClass->romClass;
+		
+		if (J9ROMCLASS_IS_ARRAY(romClass)) {
+			fixupArrayClass((J9ArrayClass *) currentClass);
+		} else {
+			fixupClass(currentClass);
+		}
 
 		/* Fixup the last ITable */
 		currentClass->lastITable = (J9ITable *) currentClass->iTable;
@@ -381,6 +381,94 @@ JVMImage::fixupClasses(void)
 		}
 
 		currentClass = (J9Class *) imageTableNextDo(getClassTable());
+	}
+}
+
+void
+JVMImage::fixupClass(J9Class *clazz)
+{
+	clazz->classObject = NULL;
+	fixupMethodRunAddresses(clazz);
+	fixupConstantPool(clazz);
+	clazz->initializeStatus = J9ClassInitNotInitialized;
+	clazz->jniIDs = NULL;
+	clazz->replacedClass = NULL;
+	clazz->callSites = NULL;
+	clazz->methodTypes = NULL;
+	clazz->varHandleMethodTypes = NULL;
+	clazz->gcLink = NULL;
+
+	UDATA totalStaticSlots = totalStaticSlotsForClass(clazz->romClass);
+	memset(clazz->ramStatics, 0, totalStaticSlots * sizeof(UDATA));
+
+	UDATA i;
+	if (NULL != clazz->staticSplitMethodTable) {
+		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; ++i) {
+			clazz->staticSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialStaticMethod;
+		}
+	}
+	if (NULL != clazz->specialSplitMethodTable) {
+		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; ++i) {
+			clazz->specialSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialSpecialMethod;
+		}
+	}
+}
+
+void
+JVMImage::fixupArrayClass(J9ArrayClass *clazz)
+{
+	clazz->classObject = NULL;
+	fixupConstantPool((J9Class *) clazz);
+	clazz->initializeStatus = J9ClassInitSucceeded;
+	clazz->jniIDs = NULL;
+	clazz->replacedClass = NULL;
+	clazz->callSites = NULL;
+	clazz->methodTypes = NULL;
+	clazz->varHandleMethodTypes = NULL;
+	clazz->gcLink = NULL;
+
+	UDATA i;
+	if (NULL != clazz->staticSplitMethodTable) {
+		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; ++i) {
+			clazz->staticSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialStaticMethod;
+		}
+	}
+	if (NULL != clazz->specialSplitMethodTable) {
+		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; ++i) {
+			clazz->specialSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialSpecialMethod;
+		}
+	}
+}
+
+void
+JVMImage::fixupMethodRunAddresses(J9Class *ramClass)
+{
+	J9ROMClass *romClass = ramClass->romClass;
+
+	if (romClass->romMethodCount != 0) {
+		UDATA i;
+		UDATA count = romClass->romMethodCount;
+		J9Method* ramMethod = ramClass->ramMethods;
+		for (i = 0; i < count; i++) {
+			initializeMethodRunAddress(_vm->mainThread, ramMethod);
+			ramMethod++;
+		}
+	}
+}
+
+void
+JVMImage::fixupConstantPool(J9Class *ramClass)
+{
+	J9ROMClass *romClass = ramClass->romClass;
+	J9ConstantPool *ramCP = ((J9ConstantPool *) ramClass->ramConstantPool);
+	J9ConstantPool *ramCPWithoutHeader = ramCP + 1;
+	UDATA ramCPCount = romClass->ramConstantPoolCount;
+	UDATA ramCPCountWithoutHeader = ramCPCount - 1;
+	
+	/* Zero the ramCP and run pre init */
+	if (ramCPCount != 0) {
+		memset(ramCPWithoutHeader, 0, ramCPCountWithoutHeader * sizeof(J9RAMConstantPoolItem));
+		internalRunPreInitInstructions(ramClass, _vm->mainThread);
 	}
 }
 
@@ -585,6 +673,21 @@ findClassLoader(J9JavaVM *javaVM, uint32_t classLoaderCategory)
 }
 
 extern "C" void
+initializeImageClassLoaderObject(J9JavaVM *javaVM, J9ClassLoader *classLoader, j9object_t classLoaderObject)
+{
+	J9VMThread* vmThread = currentVMThread(javaVM);
+
+	omrthread_monitor_enter(javaVM->classLoaderBlocksMutex);
+
+	J9CLASSLOADER_SET_CLASSLOADEROBJECT(vmThread, classLoader, classLoaderObject);
+
+	issueWriteBarrier();
+	J9VMJAVALANGCLASSLOADER_SET_VMREF(vmThread, classLoaderObject, classLoader);
+	
+	omrthread_monitor_exit(javaVM->classLoaderBlocksMutex);
+}
+
+extern "C" void
 shutdownJVMImage(J9JavaVM *javaVM)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
@@ -600,15 +703,13 @@ shutdownJVMImage(J9JavaVM *javaVM)
 }
 
 extern "C" void
-teardownAndShutdownJVMImage(J9JavaVM *javaVM)
+teardownJVMImage(J9JavaVM *javaVM)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 
 	if (IS_COLD_RUN(javaVM)) {
 		jvmImage->teardownImage();
 	}
-
-	shutdownJVMImage(javaVM);
 }
 
 extern "C" void *

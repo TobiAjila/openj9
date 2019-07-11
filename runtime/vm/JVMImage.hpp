@@ -31,6 +31,7 @@
 #include "j9comp.h"
 #include "j9protos.h"
 #include "ut_j9vm.h"
+#include "VMHelpers.hpp"
 
 #define JVMIMAGE_ACCESS_FROM_OMRPORT(omrPortLib) JVMImage *jvmImage = (JVMImage *) ((JVMImagePortLibrary *) (omrPortLib)->jvmImage)
 
@@ -73,6 +74,10 @@ private:
 
 	void fixupClassLoaders(void);
 	void fixupClasses(void);
+	void fixupClass(J9Class *clazz);
+	void fixupArrayClass(J9ArrayClass *clazz);
+	void fixupMethodRunAddresses(J9Class* ramClass);
+	void fixupConstantPool(J9Class *ramClass);
 	void fixupClassPathEntries(void);
 protected:
 	void *operator new(size_t size, void *memoryPointer) { return memoryPointer; }

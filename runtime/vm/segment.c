@@ -195,6 +195,7 @@ void freeMemorySegmentListEntry(J9MemorySegmentList *segmentList, J9MemorySegmen
 void freeMemorySegmentList(J9JavaVM *javaVM,J9MemorySegmentList *segmentList)
 {
 	PORT_ACCESS_FROM_JAVAVM(javaVM);
+	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
 	J9MemorySegment *currentSegment;
 
 	do {
@@ -208,7 +209,11 @@ void freeMemorySegmentList(J9JavaVM *javaVM,J9MemorySegmentList *segmentList)
 	if(segmentList->segmentMutex) omrthread_monitor_destroy(segmentList->segmentMutex);
 #endif
 
-	j9mem_free_memory(segmentList);
+	if (IS_COLD_RUN(javaVM) && javaVM->classMemorySegments == segmentList) {
+		imem_free_memory(segmentList);
+	} else {
+		j9mem_free_memory(segmentList);
+	}
 }
 
 

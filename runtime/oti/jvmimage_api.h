@@ -138,6 +138,15 @@ UDATA* findEntryLocationInTable(ImageTableHeader *table, UDATA entry);
 J9ClassLoader* findClassLoader(J9JavaVM *javaVM, uint32_t classLoaderCategory);
 
 /*
+* Initializes class loader object. Mimics behavious of internalAllocateClassLoader
+*
+* @param javaVM[in] the java vm
+* @param classLoader the class loader
+* @param classLoaderObject unwrapped class loader object ref
+*/
+void initializeImageClassLoaderObject(J9JavaVM* javaVM, J9ClassLoader* classLoader, j9object_t classLoaderObject);
+
+/*
 * Shut down sequence of JVMImage
 * Frees memory of heap variables and jvmimage instance
 *
