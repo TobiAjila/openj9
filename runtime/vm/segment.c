@@ -260,7 +260,7 @@ allocateMemoryForSegment(J9JavaVM *javaVM,J9MemorySegment *segment, J9PortVmemPa
 				tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
 			}
 		}
-	} else if (J9_ARE_ALL_BITS_SET(segment->type, MEMORY_TYPE_RAM_CLASS) && IS_COLD_RUN(javaVM)) {
+	} else if (J9_ARE_ALL_BITS_SET(segment->type, MEMORY_TYPE_ROM_CLASS) && IS_COLD_RUN(javaVM)) {
 		tmpAddr = imem_allocate_memory(segment->size, memoryCategory);
 	} else {
 		tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
@@ -470,7 +470,6 @@ J9MemorySegmentList *allocateMemorySegmentListWithSize(J9JavaVM * javaVM, U_32 n
 		}
 	}
 
-	
 	segmentList->nextSegment = NULL;
 	segmentList->totalSegmentSize = 0;
 	segmentList->flags = 0;
