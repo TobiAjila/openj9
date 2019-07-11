@@ -1410,7 +1410,6 @@ initializeClassPathEntry (J9JavaVM * javaVM, J9ClassPathEntry *cpEntry)
 
 		cpEntry->extraInfo = NULL;
 		zipFile = j9mem_allocate_memory((UDATA) sizeof(*zipFile), J9MEM_CATEGORY_CLASSES);
-		
 		if (NULL != zipFile) {
 			I_32 rc = 0;
 
