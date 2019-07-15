@@ -109,6 +109,11 @@ JVMImage::setupColdRun(void)
 		return IMAGE_ERROR;
 	}
 
+	_invalidTable = (J9ITable *) subAllocateMemory(sizeof(J9ITable));
+	if (NULL == _invalidTable) {
+		return IMAGE_ERROR;
+	}
+
 	return IMAGE_OK;
 }
 
@@ -354,6 +359,12 @@ JVMImage::fixupClasses(void)
 		currentClass->methodTypes = NULL;
 		currentClass->varHandleMethodTypes = NULL;
 		currentClass->gcLink = NULL;
+
+		/* Fixup the last ITable */
+		currentClass->lastITable = (J9ITable *) currentClass->iTable;
+		if (NULL == currentClass->lastITable) {
+			currentClass->lastITable = JVMImage::getInvalidTable();
+		}
 
 		currentClass = (J9Class *) imageTableNextDo(getClassTable());
 	}
