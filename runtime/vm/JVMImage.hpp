@@ -58,6 +58,7 @@ public:
 	 */
 private:
 	bool initializeMonitor(void);
+	bool initializeInvalidITable(void);
 
 	void* allocateImageMemory(UDATA size);
 	void* reallocateImageMemory(UDATA size);

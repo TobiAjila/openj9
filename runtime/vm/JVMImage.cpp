@@ -54,6 +54,21 @@ JVMImage::initializeMonitor(void)
 	return true;
 }
 
+bool
+JVMImage::initializeInvalidITable(void)
+{
+	_invalidTable = (J9ITable *) subAllocateMemory(sizeof(J9ITable));
+	if (NULL == _invalidTable) {
+		return false;
+	}
+
+	_invalidTable->interfaceClass = (J9Class *) (UDATA) 0xDEADBEEF;
+	_invalidTable->depth = 0;
+	_invalidTable->next = (J9ITable *) NULL;
+
+	return true;
+}
+
 void
 JVMImage::destroyMonitor(void)
 {
@@ -109,13 +124,9 @@ JVMImage::setupColdRun(void)
 		return IMAGE_ERROR;
 	}
 
-	_invalidTable = (J9ITable *) subAllocateMemory(sizeof(J9ITable));
-	if (NULL == _invalidTable) {
+	if (!initializeInvalidITable()) {
 		return IMAGE_ERROR;
 	}
-	_invalidTable->interfaceClass = (J9Class *) (UDATA) 0xDEADBEEF;
-	_invalidTable->depth = 0;
-	_invalidTable->next = (J9ITable *) NULL;
 
 	return IMAGE_OK;
 }
