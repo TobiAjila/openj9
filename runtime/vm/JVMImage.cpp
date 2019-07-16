@@ -113,6 +113,9 @@ JVMImage::setupColdRun(void)
 	if (NULL == _invalidTable) {
 		return IMAGE_ERROR;
 	}
+	_invalidTable->interfaceClass = (J9Class *) (UDATA) 0xDEADBEEF;
+	_invalidTable->depth = 0;
+	_invalidTable->next = (J9ITable *) NULL;
 
 	return IMAGE_OK;
 }
