@@ -68,6 +68,12 @@ typedef struct JVMImageHeader {
 	J9WSRP classLoaderTable; /* TODO: No user defined loaders currently. Needed for class loader fixup. */
 	J9WSRP classTable;
 	J9WSRP classPathEntryTable;
+
+	J9Method *cInitialStaticMethod;
+	J9Method *cInitialSpecialMethod;
+	J9Method *cInitialVirtualMethod;
+	J9Method *cInvokePrivateMethod ;
+
 } JVMImageHeader;
 
 /* table allows us to walk through different stored structures */
