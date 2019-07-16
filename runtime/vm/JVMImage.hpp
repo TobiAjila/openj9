@@ -44,6 +44,7 @@ private:
 
 	JVMImageHeader *_jvmImageHeader;
 	J9Heap *_heap;
+	J9ITable *_invalidTable;
 
 	omrthread_monitor_t _jvmImageMonitor;
 
@@ -57,6 +58,7 @@ public:
 	 */
 private:
 	bool initializeMonitor(void);
+	bool initializeInvalidITable(void);
 
 	void* allocateImageMemory(UDATA size);
 	void* reallocateImageMemory(UDATA size);
@@ -106,7 +108,7 @@ public:
 
 	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod);
 	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod);
-
+	J9ITable* getInvalidTable(void) { return _invalidTable; }
 };
 
 #endif /* JVMIMAGE_H_ */

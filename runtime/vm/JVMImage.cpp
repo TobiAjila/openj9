@@ -54,6 +54,21 @@ JVMImage::initializeMonitor(void)
 	return true;
 }
 
+bool
+JVMImage::initializeInvalidITable(void)
+{
+	_invalidTable = (J9ITable *) subAllocateMemory(sizeof(J9ITable));
+	if (NULL == _invalidTable) {
+		return false;
+	}
+
+	_invalidTable->interfaceClass = (J9Class *) (UDATA) 0xDEADBEEF;
+	_invalidTable->depth = 0;
+	_invalidTable->next = (J9ITable *) NULL;
+
+	return true;
+}
+
 void
 JVMImage::destroyMonitor(void)
 {
@@ -106,6 +121,10 @@ JVMImage::setupColdRun(void)
 	if ((NULL == allocateTable(getClassLoaderTable(), INITIAL_CLASSLOADER_TABLE_SIZE))
 		|| (NULL == allocateTable(getClassTable(), INITIAL_CLASS_TABLE_SIZE))
 		|| (NULL == allocateTable(getClassPathEntryTable(), INITIAL_CLASSPATH_TABLE_SIZE))) {
+		return IMAGE_ERROR;
+	}
+
+	if (!initializeInvalidITable()) {
 		return IMAGE_ERROR;
 	}
 
@@ -354,6 +373,12 @@ JVMImage::fixupClasses(void)
 		currentClass->methodTypes = NULL;
 		currentClass->varHandleMethodTypes = NULL;
 		currentClass->gcLink = NULL;
+
+		/* Fixup the last ITable */
+		currentClass->lastITable = (J9ITable *) currentClass->iTable;
+		if (NULL == currentClass->lastITable) {
+			currentClass->lastITable = JVMImage::getInvalidTable();
+		}
 
 		currentClass = (J9Class *) imageTableNextDo(getClassTable());
 	}
