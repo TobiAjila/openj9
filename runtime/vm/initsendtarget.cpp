@@ -27,6 +27,7 @@
 #include "vm_internal.h"
 #include "VMHelpers.hpp"
 #include <string.h>
+#include "jvmimageport.h"
 
 extern "C" {
 
@@ -236,9 +237,8 @@ initializeInitialMethods(J9JavaVM *vm)
 	if (IS_WARM_RUN(vm)) {
 		set_initial_methods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod, &cInvokePrivateMethod);
 	} else {
-
-		if (IS_COLD_RUN(vm)){
-			JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
+		if (IS_COLD_RUN(vm)) {
+			JVMIMAGEPORT_ACCESS_FROM_JAVAVM(vm);
 			cInitialStaticMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialSpecialMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialVirtualMethod = (J9Method *) imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
