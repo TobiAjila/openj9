@@ -233,13 +233,23 @@ initializeInitialMethods(J9JavaVM *vm)
 	J9Method *cInitialVirtualMethod = NULL;
 	J9Method *cInvokePrivateMethod = NULL;
 
-	if (IS_COLD_RUN(vm)){
-		PORT_ACCESS_FROM_JAVAVM(vm);
+	if (IS_WARM_RUN(vm)) {
+		set_initial_methods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod, &cInvokePrivateMethod);
+	} else {
 
-		cInitialStaticMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-		cInitialSpecialMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-		cInitialVirtualMethod = (J9Method *) j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-		cInvokePrivateMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+		if (IS_COLD_RUN(vm)){
+			JVMIMAGEPORT_ACCESS_FROM_JAVAVM(javaVM);
+			cInitialStaticMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialSpecialMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialVirtualMethod = (J9Method *) imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInvokePrivateMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+		} else {
+			PORT_ACCESS_FROM_JAVAVM(vm);
+			cInitialStaticMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialSpecialMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialVirtualMethod = (J9Method *) j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInvokePrivateMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+		}
 
 		memset(cInitialStaticMethod, 0, sizeof(J9Method));
 		cInitialStaticMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_STATIC);
@@ -255,10 +265,7 @@ initializeInitialMethods(J9JavaVM *vm)
 		cInvokePrivateMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE);
 		#endif /* J9VM_OPT_VALHALLA_NESTMATES */
 
-		store_Initial_Methods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
-		
-	} else {
-		set_Initial_Methods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod, &cInvokePrivateMethod);
+		store_initial_methods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
 	}
 	
 	vm->jniSendTarget = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_RUN_JNI_NATIVE);

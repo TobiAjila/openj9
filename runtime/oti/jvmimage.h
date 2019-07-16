@@ -72,8 +72,7 @@ typedef struct JVMImageHeader {
 	J9Method *cInitialStaticMethod;
 	J9Method *cInitialSpecialMethod;
 	J9Method *cInitialVirtualMethod;
-	J9Method *cInvokePrivateMethod ;
-
+	J9Method *cInvokePrivateMethod;
 } JVMImageHeader;
 
 /* table allows us to walk through different stored structures */

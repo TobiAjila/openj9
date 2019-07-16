@@ -162,7 +162,7 @@ void teardownJVMImage(J9JavaVM *javaVM);
 * @param cInitialVirtualMethod[in] the initial virtual method
 * @param cInvokePrivateMethod[in] the invoke private method
 */
-void store_Initial_Methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod);
+void store_initial_methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod);
 
 /*
 * Set initial methods to address stored in jvmimageheader 
@@ -173,7 +173,7 @@ void store_Initial_Methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9M
 * @param cInitialVirtualMethod[in] the initial virtual method
 * @param cInvokePrivateMethod[in] the invoke private method
 */
-void set_Initial_Methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod);
+void set_initial_methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod);
 
 #ifdef __cplusplus
 }

@@ -622,14 +622,14 @@ image_mem_free_memory(struct OMRPortLibrary *portLibrary, void *memoryPointer)
 }
 
 extern "C" void
-store_Initial_Methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod)
+store_initial_methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 	jvmImage->storeInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
 }
 
 extern "C" void
-set_Initial_Methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod)
+set_initial_methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 	jvmImage->setInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
