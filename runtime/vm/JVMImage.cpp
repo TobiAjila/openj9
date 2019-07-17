@@ -482,21 +482,19 @@ setupJVMImagePortLibrary(J9JavaVM *javaVM)
 }
 
 void
-JVMImage::storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod)
+JVMImage::storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod)
 {
 	_jvmImageHeader->cInitialStaticMethod = cInitialStaticMethod;
 	_jvmImageHeader->cInitialSpecialMethod = cInitialSpecialMethod;
 	_jvmImageHeader->cInitialVirtualMethod = cInitialVirtualMethod;
-	_jvmImageHeader->cInvokePrivateMethod = cInvokePrivateMethod;
 }
 
 void
-JVMImage::setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod)
+JVMImage::setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod)
 {
 	*cInitialStaticMethod = _jvmImageHeader->cInitialStaticMethod;
 	*cInitialSpecialMethod = _jvmImageHeader->cInitialSpecialMethod;
 	*cInitialVirtualMethod = _jvmImageHeader->cInitialVirtualMethod;
-	*cInvokePrivateMethod = _jvmImageHeader->cInvokePrivateMethod;
 }
 
 extern "C" UDATA
@@ -647,15 +645,15 @@ image_mem_free_memory(struct OMRPortLibrary *portLibrary, void *memoryPointer)
 }
 
 extern "C" void
-store_initial_methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod)
+store_initial_methods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
-	jvmImage->storeInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
+	jvmImage->storeInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod);
 }
 
 extern "C" void
-set_initial_methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod)
+set_initial_methods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
-	jvmImage->setInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
+	jvmImage->setInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod);
 }
