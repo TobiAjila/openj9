@@ -443,7 +443,7 @@ JVMImage::fixupArrayClass(J9ArrayClass *clazz)
 void
 JVMImage::fixupMethodRunAddresses(J9Class *ramClass)
 {
-	J9VMThread *vmThread = currentVMThread(javaVM);
+	J9VMThread *vmThread = currentVMThread(_vm);
 	J9ROMClass *romClass = ramClass->romClass;
 
 	if (romClass->romMethodCount != 0) {
@@ -460,7 +460,7 @@ JVMImage::fixupMethodRunAddresses(J9Class *ramClass)
 void
 JVMImage::fixupConstantPool(J9Class *ramClass)
 {
-	J9VMThread *vmThread = currentVMThread(javaVM);
+	J9VMThread *vmThread = currentVMThread(_vm);
 	J9ROMClass *romClass = ramClass->romClass;
 	J9ConstantPool *ramCP = ((J9ConstantPool *) ramClass->ramConstantPool);
 	J9ConstantPool *ramCPWithoutHeader = ramCP + 1;
