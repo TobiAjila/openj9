@@ -443,14 +443,15 @@ JVMImage::fixupArrayClass(J9ArrayClass *clazz)
 void
 JVMImage::fixupMethodRunAddresses(J9Class *ramClass)
 {
+	J9VMThread *vmThread = currentVMThread(javaVM);
 	J9ROMClass *romClass = ramClass->romClass;
 
 	if (romClass->romMethodCount != 0) {
 		UDATA i;
 		UDATA count = romClass->romMethodCount;
-		J9Method* ramMethod = ramClass->ramMethods;
+		J9Method *ramMethod = ramClass->ramMethods;
 		for (i = 0; i < count; i++) {
-			initializeMethodRunAddress(_vm->mainThread, ramMethod);
+			initializeMethodRunAddress(vmThread, ramMethod);
 			ramMethod++;
 		}
 	}
@@ -459,16 +460,17 @@ JVMImage::fixupMethodRunAddresses(J9Class *ramClass)
 void
 JVMImage::fixupConstantPool(J9Class *ramClass)
 {
+	J9VMThread *vmThread = currentVMThread(javaVM);
 	J9ROMClass *romClass = ramClass->romClass;
 	J9ConstantPool *ramCP = ((J9ConstantPool *) ramClass->ramConstantPool);
 	J9ConstantPool *ramCPWithoutHeader = ramCP + 1;
 	UDATA ramCPCount = romClass->ramConstantPoolCount;
 	UDATA ramCPCountWithoutHeader = ramCPCount - 1;
 	
-	/* Zero the ramCP and run pre init */
+	/* Zero the ramCP and initialize constant pool */
 	if (ramCPCount != 0) {
 		memset(ramCPWithoutHeader, 0, ramCPCountWithoutHeader * sizeof(J9RAMConstantPoolItem));
-		internalRunPreInitInstructions(ramClass, _vm->mainThread);
+		internalRunPreInitInstructions(ramClass, vmThread);
 	}
 }
 
@@ -675,7 +677,7 @@ findClassLoader(J9JavaVM *javaVM, uint32_t classLoaderCategory)
 extern "C" void
 initializeImageClassLoaderObject(J9JavaVM *javaVM, J9ClassLoader *classLoader, j9object_t classLoaderObject)
 {
-	J9VMThread* vmThread = currentVMThread(javaVM);
+	J9VMThread *vmThread = currentVMThread(javaVM);
 
 	omrthread_monitor_enter(javaVM->classLoaderBlocksMutex);
 

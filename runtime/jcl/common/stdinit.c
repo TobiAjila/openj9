@@ -434,14 +434,12 @@ internalInitializeJavaLangClassLoader(JNIEnv * env)
 			if (IS_WARM_RUN(vm)) {
 				vm->extensionClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_EXTENSION_CLASSLOADER);
 			}
-
 			/* fall back on allocation if find fails */
 			if (NULL == vm->extensionClassLoader) {
 				vm->extensionClassLoader = (void*)(UDATA)(vmFuncs->internalAllocateClassLoader(vm, classLoaderObject));
 			} else {
 				vmFuncs->initializeImageClassLoaderObject(vm, vm->extensionClassLoader, classLoaderObject);
 			}
-
 			if (NULL != vmThread->currentException) {
 				/* while this exception check and return statement seem un-necessary, it is added to prevent
 				 * oversights if anybody adds more code in the future.
