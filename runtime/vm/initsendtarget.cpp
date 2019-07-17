@@ -26,8 +26,8 @@
 #include "rommeth.h"
 #include "vm_internal.h"
 #include "VMHelpers.hpp"
-#include <string.h>
 #include "jvmimageport.h"
+#include <string.h>
 
 extern "C" {
 
@@ -229,6 +229,9 @@ initializeMethodRunAddressNoHook(J9JavaVM* vm, J9Method *method)
 void
 initializeInitialMethods(J9JavaVM *vm)
 {
+	JVMIMAGEPORT_ACCESS_FROM_JAVAVM(vm);
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
 	J9Method *cInitialStaticMethod = NULL;
 	J9Method *cInitialSpecialMethod = NULL;
 	J9Method *cInitialVirtualMethod = NULL;
@@ -238,13 +241,12 @@ initializeInitialMethods(J9JavaVM *vm)
 		set_initial_methods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod, &cInvokePrivateMethod);
 	} else {
 		if (IS_COLD_RUN(vm)) {
-			JVMIMAGEPORT_ACCESS_FROM_JAVAVM(vm);
 			cInitialStaticMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialSpecialMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialVirtualMethod = (J9Method *) imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInvokePrivateMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			store_initial_methods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
 		} else {
-			PORT_ACCESS_FROM_JAVAVM(vm);
 			cInitialStaticMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialSpecialMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialVirtualMethod = (J9Method *) j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
@@ -264,8 +266,6 @@ initializeInitialMethods(J9JavaVM *vm)
 		memset(cInvokePrivateMethod, 0, sizeof(J9Method));
 		cInvokePrivateMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE);
 		#endif /* J9VM_OPT_VALHALLA_NESTMATES */
-
-		store_initial_methods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod, cInvokePrivateMethod);
 	}
 	
 	vm->jniSendTarget = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_RUN_JNI_NATIVE);
