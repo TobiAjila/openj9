@@ -106,8 +106,8 @@ public:
 	ImageTableHeader* getClassTable(void) { return WSRP_GET(_jvmImageHeader->classTable, ImageTableHeader*); }
 	ImageTableHeader* getClassPathEntryTable(void) { return WSRP_GET(_jvmImageHeader->classPathEntryTable, ImageTableHeader*); }
 
-	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod, J9Method *cInvokePrivateMethod);
-	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod, J9Method **cInvokePrivateMethod);
+	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod);
+	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod);
 	J9ITable* getInvalidTable(void) { return _invalidTable; }
 };
 
