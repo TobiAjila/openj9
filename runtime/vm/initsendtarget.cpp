@@ -242,12 +242,12 @@ initializeInitialMethods(J9JavaVM *vm)
 		if (IS_COLD_RUN(vm)) {
 			cInitialStaticMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialSpecialMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-			cInitialVirtualMethod = (J9Method *) imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialVirtualMethod = (J9Method *)imem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			store_initial_methods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod);
 		} else {
 			cInitialStaticMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 			cInitialSpecialMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-			cInitialVirtualMethod = (J9Method *) j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+			cInitialVirtualMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
 		}
 
 		memset(cInitialStaticMethod, 0, sizeof(J9Method));
@@ -261,9 +261,15 @@ initializeInitialMethods(J9JavaVM *vm)
 	}
 	
 	vm->jniSendTarget = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_RUN_JNI_NATIVE);
-	vm->initialMethods.initialStaticMethod = &cInitialStaticMethod;
-	vm->initialMethods.initialSpecialMethod = &cInitialSpecialMethod;
-	vm->initialMethods.initialVirtualMethod = &cInitialVirtualMethod;
+	vm->initialMethods.initialStaticMethod = cInitialStaticMethod;
+	vm->initialMethods.initialSpecialMethod = cInitialSpecialMethod;
+	vm->initialMethods.initialVirtualMethod = cInitialVirtualMethod;
+	#if defined(J9VM_OPT_VALHALLA_NESTMATES)
+	cInvokePrivateMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
+	memset(cInvokePrivateMethod, 0, sizeof(J9Method));
+	cInvokePrivateMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE);
+	vm->initialMethods.cInvokePrivateMethod = cInvokePrivateMethod;
+	#endif /* J9VM_OPT_VALHALLA_NESTMATES */
 }
 
 }
