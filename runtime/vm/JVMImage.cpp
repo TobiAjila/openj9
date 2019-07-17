@@ -403,12 +403,12 @@ JVMImage::fixupClass(J9Class *clazz)
 
 	UDATA i;
 	if (NULL != clazz->staticSplitMethodTable) {
-		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; ++i) {
+		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; i++) {
 			clazz->staticSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialStaticMethod;
 		}
 	}
 	if (NULL != clazz->specialSplitMethodTable) {
-		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; ++i) {
+		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; i++) {
 			clazz->specialSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialSpecialMethod;
 		}
 	}
@@ -429,12 +429,12 @@ JVMImage::fixupArrayClass(J9ArrayClass *clazz)
 
 	UDATA i;
 	if (NULL != clazz->staticSplitMethodTable) {
-		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; ++i) {
+		for (i = 0; i < clazz->romClass->staticSplitMethodRefCount; i++) {
 			clazz->staticSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialStaticMethod;
 		}
 	}
 	if (NULL != clazz->specialSplitMethodTable) {
-		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; ++i) {
+		for (i = 0; i < clazz->romClass->specialSplitMethodRefCount; i++) {
 			clazz->specialSplitMethodTable[i] = (J9Method*)_vm->initialMethods.initialSpecialMethod;
 		}
 	}

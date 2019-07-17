@@ -397,7 +397,7 @@ internalInitializeJavaLangClassLoader(JNIEnv * env)
 
 		/* set app class loader if warm run */
 		if (IS_WARM_RUN(vm)) {
-			vm->applicationClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_APP_CLASSLOADER);	
+			vm->applicationClassLoader = vmFuncs->findClassLoader(vm, IMAGE_CATEGORY_APP_CLASSLOADER);
 		}
 		/* fall back on allocation if find fails */
 		if (NULL == vm->applicationClassLoader) {
