@@ -226,6 +226,10 @@ initializeMethodRunAddressNoHook(J9JavaVM* vm, J9Method *method)
 	method->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_NON_SYNC);
 }
 
+#if defined(J9VM_OPT_VALHALLA_NESTMATES)
+J9Method cInvokePrivateMethod = {0, 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE, 0};
+#endif /* J9VM_OPT_VALHALLA_NESTMATES */
+
 void
 initializeInitialMethods(J9JavaVM *vm)
 {
@@ -265,10 +269,7 @@ initializeInitialMethods(J9JavaVM *vm)
 	vm->initialMethods.initialSpecialMethod = cInitialSpecialMethod;
 	vm->initialMethods.initialVirtualMethod = cInitialVirtualMethod;
 	#if defined(J9VM_OPT_VALHALLA_NESTMATES)
-	cInvokePrivateMethod = (J9Method *)j9mem_allocate_memory(sizeof(J9Method), J9MEM_CATEGORY_CLASSES);
-	memset(cInvokePrivateMethod, 0, sizeof(J9Method));
-	cInvokePrivateMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE);
-	vm->initialMethods.cInvokePrivateMethod = cInvokePrivateMethod;
+	vm->initialMethods.invokePrivateMethod = &cInvokePrivateMethod;
 	#endif /* J9VM_OPT_VALHALLA_NESTMATES */
 }
 
