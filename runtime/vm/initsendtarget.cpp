@@ -227,7 +227,7 @@ initializeMethodRunAddressNoHook(J9JavaVM* vm, J9Method *method)
 }
 
 #if defined(J9VM_OPT_VALHALLA_NESTMATES)
-J9Method cInvokePrivateMethod = {0, 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE, 0};
+J9Method cInvokePrivateMethod = { 0, 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INVOKE_PRIVATE), 0 };
 #endif /* J9VM_OPT_VALHALLA_NESTMATES */
 
 void
