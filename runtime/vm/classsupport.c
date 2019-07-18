@@ -953,6 +953,12 @@ loadNonArrayClass(J9VMThread* vmThread, J9Module *j9module, U_8* className, UDAT
 
 	foundClass = hashClassTableAt(classLoader, className, classNameLength);
 	if (NULL != foundClass) {
+		if (IS_WARM_RUN(vmThread->javaVM)
+			&& classLoader != vmThread->javaVM->systemClassLoader
+			&& foundClass->classObject == NULL) {
+			foundClass = initializeImageClassObject(vmThread, classLoader, foundClass);
+		}
+		
 		if (!fastMode) {
 			omrthread_monitor_exit(vmThread->javaVM->classTableMutex);
 		}

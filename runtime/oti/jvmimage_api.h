@@ -138,8 +138,19 @@ UDATA* findEntryLocationInTable(ImageTableHeader *table, UDATA entry);
 J9ClassLoader* findClassLoader(J9JavaVM *javaVM, uint32_t classLoaderCategory);
 
 /*
-* Initializes class loader object. Mimics behaviour of internalAllocateClassLoader
+* Initializes class object. Mimics behaviour of internalCreateRAMClass
 *
+* @param javaVM[in] the java vm
+* @param classLoader the class loader loading the class
+* @param clazz the class being loader
+*
+* @return class object if object allocation passes otherwise null
+*/
+J9Class* initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLoader, J9Class *clazz);
+
+/*
+* Initializes class loader object. Mimics behaviour of internalAllocateClassLoader
+* 
 * @param javaVM[in] the java vm
 * @param classLoader the class loader
 * @param classLoaderObject unwrapped class loader object ref

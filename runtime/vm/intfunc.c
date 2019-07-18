@@ -378,4 +378,5 @@ J9InternalVMFunctions J9InternalFunctions = {
 	deregisterCPEntry,
 	findClassLoader,
 	initializeImageClassLoaderObject,
+	initializeImageClassObject,
 };

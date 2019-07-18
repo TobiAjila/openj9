@@ -131,8 +131,14 @@ retry:
 	if (vmFuncs->hashClassTableAt(classLoader, utf8Name, utf8Length) != NULL) {
 		/* Bad, we have already defined this class - fail */
 		omrthread_monitor_exit(vm->classTableMutex);
+
 		if (J9_ARE_NO_BITS_SET(options, J9_FINDCLASS_FLAG_NAME_IS_INVALID)) {
-			vmFuncs->setCurrentException(currentThread, J9VMCONSTANTPOOL_JAVALANGLINKAGEERROR, (UDATA *)*(j9object_t*)className);
+			if (J9_ARE_ANY_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)) {
+				clazz = vmFuncs->hashClassTableAt(classLoader, utf8Name, utf8Length);
+				clazz = vmFuncs->initializeImageClassObject(currentThread, classLoader, clazz);
+			} else {
+				vmFuncs->setCurrentException(currentThread, J9VMCONSTANTPOOL_JAVALANGLINKAGEERROR, (UDATA*)* (j9object_t*)className);
+			}
 		}
 		goto done;
 	}

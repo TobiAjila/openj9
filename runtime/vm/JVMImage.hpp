@@ -31,6 +31,7 @@
 #include "j9comp.h"
 #include "j9protos.h"
 #include "ut_j9vm.h"
+#include "objhelp.h"
 
 class JVMImage
 {
