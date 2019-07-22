@@ -133,6 +133,7 @@ retry:
 		omrthread_monitor_exit(vm->classTableMutex);
 
 		if (J9_ARE_NO_BITS_SET(options, J9_FINDCLASS_FLAG_NAME_IS_INVALID)) {
+			/* TODO: Incorrect pathway for loading already cached class */
 			if (J9_ARE_ANY_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)) {
 				clazz = vmFuncs->hashClassTableAt(classLoader, utf8Name, utf8Length);
 				clazz = vmFuncs->initializeImageClassObject(currentThread, classLoader, clazz);
