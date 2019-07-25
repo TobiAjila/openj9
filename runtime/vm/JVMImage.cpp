@@ -697,19 +697,19 @@ initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLoader, J9C
 	/* Allocate class object */
 	J9Class *jlClass = J9VMCONSTANTPOOL_CLASSREF_AT(javaVM, J9VMCONSTANTPOOL_JAVALANGCLASS)->value;
 
-	if (jlClass == NULL) {
+	if (NULL == jlClass) {
 		return NULL;
 	}
 	J9Class *lockClass = J9VMJAVALANGJ9VMINTERNALSCLASSINITIALIZATIONLOCK_OR_NULL(javaVM);
 
 	j9object_t classObject = javaVM->memoryManagerFunctions->J9AllocateObject(vmThread, jlClass, J9_GC_ALLOCATE_OBJECT_TENURED | J9_GC_ALLOCATE_OBJECT_NON_INSTRUMENTABLE | J9_GC_ALLOCATE_OBJECT_HASHED);
-	if (classObject == NULL) {
+	if (NULL == classObject) {
 		setHeapOutOfMemoryError(vmThread);
 		return NULL;
 	}
 
 	/* Allocate lock object if lock class already allocated */
-	if (lockClass != NULL) {
+	if (NULL != lockClass) {
 		j9object_t lockObject;
 		UDATA allocateFlags = J9_GC_ALLOCATE_OBJECT_NON_INSTRUMENTABLE;
 
@@ -717,7 +717,7 @@ initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLoader, J9C
 		lockObject = javaVM->memoryManagerFunctions->J9AllocateObject(vmThread, lockClass, allocateFlags);
 		classObject = POP_OBJECT_IN_SPECIAL_FRAME(vmThread);
 
-		if (lockObject == NULL) {
+		if (NULL == lockObject) {
 			setHeapOutOfMemoryError(vmThread);
 			return NULL;
 		}
