@@ -1771,16 +1771,16 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 			}
 #endif
 			{
-				IDATA restoreStateIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XRESTORERAMSTATE, NULL);
-				IDATA saveStateIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XSAVERAMSTATE, NULL);
+				IDATA ramStateIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XRAMCACHE, NULL);
 				char *optionValue = NULL;
-				/* If both restore (warm run) and save (cold run) are specified save state takes precedence */
-				if (saveStateIndex >= 0) {
-					GET_OPTION_VALUE(saveStateIndex, '=', &optionValue);
-					vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN;
-				} else if (restoreStateIndex >= 0) {
-					GET_OPTION_VALUE(restoreStateIndex, '=', &optionValue);
-					vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN;
+				if (ramStateIndex >= 0) {
+					GET_OPTION_VALUE(ramStateIndex, '=', &optionValue);
+					/* Check whether it is a cold or warm run by checking if the cache already exists */
+					if (access(optionValue, F_OK) != -1) {
+						vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN;
+					} else {
+						vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN;
+					}
 				}
 				vm->ramStateFilePath = optionValue;
 			}
