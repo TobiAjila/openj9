@@ -133,18 +133,18 @@ void freeMemorySegment(J9JavaVM *javaVM, J9MemorySegment *segment, BOOLEAN freeD
 		} else if ((useAdvise) && (MEMORY_TYPE_JIT_SCRATCH_SPACE & segment->type)) {
 			j9mem_advise_and_free_memory(segment->baseAddress);
 		} else if (segment->type & (MEMORY_TYPE_RAM_CLASS | MEMORY_TYPE_UNDEAD_CLASS)) {
+			/* TODO: Add Memory type for allocation inside JVMImage (MEMORY_TYPE_IMAGE_ALLOCATED). see @ref omr:j9nongenerated.h */
+			/* Check flag for freeing memory */
 			if (IS_COLD_RUN(javaVM)) {
 				if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 					assert(!"There is no support for compressedRefs");
-				}
-				else {
+				} else {
 					imem_free_memory(segment->baseAddress);
 				}
 			} else {
 				if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 					j9mem_free_memory32(segment->baseAddress);
-				}
-				else {
+				} else {
 					j9mem_free_memory(segment->baseAddress);
 				}
 			}
@@ -209,6 +209,8 @@ void freeMemorySegmentList(J9JavaVM *javaVM,J9MemorySegmentList *segmentList)
 	if(segmentList->segmentMutex) omrthread_monitor_destroy(segmentList->segmentMutex);
 #endif
 
+	/* Guaranteed that classMemorySegments was allocated on JVMImageHeap */
+	/* TODO: In J9MemorySegmentList flags add allocation from image rather than this check. see @ref omr:j9nongenerated.h */
 	if (IS_COLD_RUN(javaVM) && javaVM->classMemorySegments == segmentList) {
 		imem_free_memory(segmentList);
 	} else {
@@ -253,20 +255,20 @@ allocateMemoryForSegment(J9JavaVM *javaVM,J9MemorySegment *segment, J9PortVmemPa
 		if (IS_COLD_RUN(javaVM)) {
 			if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 				assert(!"There is no support for compressedRefs");
-			}
-			else {
+			} else {
 				tmpAddr = imem_allocate_memory(segment->size, memoryCategory);
+				/* TODO: Add Memory type for allocation inside JVMImage (MEMORY_TYPE_IMAGE_ALLOCATED). see @ref omr:j9nongenerated.h */
 			}
 		} else {
 			if (J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 				tmpAddr = j9mem_allocate_memory32(segment->size, memoryCategory);
-			}
-			else {
+			} else {
 				tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
 			}
 		}
 	} else if (J9_ARE_ALL_BITS_SET(segment->type, MEMORY_TYPE_ROM_CLASS) && IS_COLD_RUN(javaVM)) {
 		tmpAddr = imem_allocate_memory(segment->size, memoryCategory);
+		/* TODO: Add Memory type for allocation inside JVMImage (MEMORY_TYPE_IMAGE_ALLOCATED). see @ref omr:j9nongenerated.h */
 	} else {
 		tmpAddr = j9mem_allocate_memory(segment->size, memoryCategory);
 	}

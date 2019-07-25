@@ -637,7 +637,7 @@ freeJavaVM(J9JavaVM * vm)
 		runShutdownStage(vm, INTERPRETER_SHUTDOWN, NULL, 0);
 	}
 
-	if (IS_COLD_RUN(vm) || IS_WARM_RUN(vm)) {
+	if (IS_COLD_RUN(vm)) {
 		teardownJVMImage(vm);
 	}
 
@@ -859,6 +859,10 @@ freeJavaVM(J9JavaVM * vm)
 	if (NULL != vm->realtimeSizeClasses) {
 		j9mem_free_memory(vm->realtimeSizeClasses);
 		vm->realtimeSizeClasses = NULL;
+	}
+
+	if (IS_RAM_CACHE_ON(vm)) {
+		shutdownJVMImage(vm);
 	}
 
 	j9mem_free_memory(vm);
@@ -5978,7 +5982,8 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 		goto error;
 	}
 
-	if (J9_ARE_ANY_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN | J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN)
+	/* TODO: Create separate initialization stage for RAM Caching */
+	if (IS_RAM_CACHE_ON(vm)
 		&& 0 == initializeJVMImage(vm)) {
 		goto error;
 	}

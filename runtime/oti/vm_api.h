@@ -4224,6 +4224,8 @@ attachVMToOMR(J9JavaVM *vm);
 void
 detachVMFromOMR(J9JavaVM *vm);
 
+
+
 /* ------------------- callin.cpp ----------------- */
 
 /**

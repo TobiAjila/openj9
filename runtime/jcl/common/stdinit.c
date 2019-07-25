@@ -127,7 +127,8 @@ standardInit( J9JavaVM *vm, char *dllName)
 		}
 	}
 	/* Now create the classPathEntries */
-	if (J9_ARE_NO_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN) && initializeBootstrapClassPath(vm)) {
+	if (J9_ARE_NO_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)
+		&& initializeBootstrapClassPath(vm)) {
 		goto _fail;
 	}
 #endif
@@ -403,6 +404,7 @@ internalInitializeJavaLangClassLoader(JNIEnv * env)
 		if (NULL == vm->applicationClassLoader) {
 			vm->applicationClassLoader = (void*)(UDATA)(vmFuncs->internalAllocateClassLoader(vm, J9_JNI_UNWRAP_REFERENCE(appClassLoader)));
 		} else {
+			/* ApplicationClassLoader was found successfully inside JVMImage */
 			vmFuncs->initializeImageClassLoaderObject(vm, vm->applicationClassLoader, J9_JNI_UNWRAP_REFERENCE(appClassLoader));
 		}
 		

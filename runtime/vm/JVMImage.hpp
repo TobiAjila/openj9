@@ -43,7 +43,7 @@ private:
 
 	JVMImageHeader *_jvmImageHeader;
 	J9Heap *_heap;
-	J9ITable *_invalidTable;
+	J9ITable *_invalidITable;
 
 	omrthread_monitor_t _jvmImageMonitor;
 
@@ -59,8 +59,9 @@ private:
 	bool initializeMonitor(void);
 	bool initializeInvalidITable(void);
 
+	/* Image Heap initialization and allocation functions */
 	void* allocateImageMemory(UDATA size);
-	void* reallocateImageMemory(UDATA size);
+	void* reallocateImageMemory(UDATA size); /* TODO: Function will be used once random memory loading is allowed. Function not used currently */
 	void* initializeHeap(void);
 
 	bool allocateImageTableHeaders(void);
@@ -70,6 +71,7 @@ private:
 	bool readImageFromFile(void);
 	bool writeImageToFile(void);
 
+	/* Fixup functions called during teardown sequence */
 	void fixupClassLoaders(void);
 	void fixupClasses(void);
 	void fixupClass(J9Class *clazz);
@@ -90,9 +92,10 @@ public:
 
 	void teardownImage(void);
 
+	/* Suballocator functions */
 	void* subAllocateMemory(uintptr_t byteAmount);
-	void* reallocateMemory(void *address, uintptr_t byteAmount); /* TODO: Extension functions for heap (not used currently) */
-	void freeSubAllocatedMemory(void *memStart); /* TODO: Extension functions for heap (not used currently) */
+	void* reallocateMemory(void *address, uintptr_t byteAmount);
+	void freeSubAllocatedMemory(void *memStart);
 
 	void registerEntryInTable(ImageTableHeader *table, UDATA entry);
 	void deregisterEntryInTable(ImageTableHeader *table, UDATA entry);
@@ -105,13 +108,16 @@ public:
 	J9ClassLoader* getApplicationClassLoader(void) { return WSRP_GET(_jvmImageHeader->appClassLoader, J9ClassLoader*); }
 	J9ClassLoader* getExtensionClassLoader(void) { return WSRP_GET(_jvmImageHeader->extensionClassLoader, J9ClassLoader*); }
 	
+	/* Accessors for tables */
 	ImageTableHeader* getClassLoaderTable(void) { return WSRP_GET(_jvmImageHeader->classLoaderTable, ImageTableHeader*); }
 	ImageTableHeader* getClassTable(void) { return WSRP_GET(_jvmImageHeader->classTable, ImageTableHeader*); }
 	ImageTableHeader* getClassPathEntryTable(void) { return WSRP_GET(_jvmImageHeader->classPathEntryTable, ImageTableHeader*); }
 
+	/* VM Initial Methods accessors/mutators */
 	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod);
 	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod);
-	J9ITable* getInvalidTable(void) { return _invalidTable; }
+
+	J9ITable* getInvalidITable(void) { return _invalidITable; }
 };
 
 #endif /* JVMIMAGE_H_ */
