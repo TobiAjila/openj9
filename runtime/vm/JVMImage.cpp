@@ -34,7 +34,6 @@ JVMImage::JVMImage(J9JavaVM *javaVM) :
 	_jvmImageHeader(NULL),
 	_heap(NULL)
 {
-	_dumpFileName = javaVM->ramStateFilePath;
 }
 
 JVMImage::~JVMImage()
@@ -490,12 +489,12 @@ JVMImage::fixupClassPathEntries(void)
 bool
 JVMImage::readImageFromFile(void)
 {
-	Trc_VM_ReadImageFromFile_Entry(_heap, _dumpFileName);
+	Trc_VM_ReadImageFromFile_Entry(_heap, _vm->ramStateFilePath);
 
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenRead | EsOpenWrite, 0444);
+	intptr_t fileDescriptor = omrfile_open(_vm->ramStateFilePath, EsOpenRead | EsOpenWrite, 0444);
 	if (-1 == fileDescriptor) {
 		return false;
 	}
@@ -525,12 +524,12 @@ JVMImage::readImageFromFile(void)
 bool
 JVMImage::writeImageToFile(void)
 {
-	Trc_VM_WriteImageToFile_Entry(_heap, _dumpFileName);
+	Trc_VM_WriteImageToFile_Entry(_heap, _vm->ramStateFilePath);
 
 	OMRPortLibrary *portLibrary = IMAGE_OMRPORT_FROM_JAVAVM(_vm);
 	OMRPORT_ACCESS_FROM_OMRPORT(portLibrary);
 
-	intptr_t fileDescriptor = omrfile_open(_dumpFileName, EsOpenCreate | EsOpenCreateAlways | EsOpenWrite, 0666);
+	intptr_t fileDescriptor = omrfile_open(_vm->ramStateFilePath, EsOpenCreate | EsOpenCreateAlways | EsOpenWrite, 0666);
 	if (-1 == fileDescriptor) {
 		return false;
 	}

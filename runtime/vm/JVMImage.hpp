@@ -46,8 +46,6 @@ private:
 	J9ITable *_invalidTable;
 
 	omrthread_monitor_t _jvmImageMonitor;
-
-	char *_dumpFileName;
 protected:
 public:
 	static const UDATA INITIAL_IMAGE_SIZE;
