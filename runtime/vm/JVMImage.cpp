@@ -376,17 +376,6 @@ JVMImage::fixupClassLoaders(void)
 		currentClassLoader->jniRedirectionBlocks = NULL;
 		currentClassLoader->gcRememberedSet = 0;
 
-		/* TODO: once user defined classes are allowed better category representation */
-		UDATA category = -1;
-		if (_vm->systemClassLoader == currentClassLoader) {
-			category = IMAGE_CATEGORY_SYSTEM_CLASSLOADER;
-		} else if(_vm->applicationClassLoader == currentClassLoader) {
-			category = IMAGE_CATEGORY_APP_CLASSLOADER;
-		} else {
-			category = IMAGE_CATEGORY_EXTENSION_CLASSLOADER;
-		}
-		Trc_VM_ImageClassLoaderFixup(currentClassLoader, category);
-
 		currentClassLoader = (J9ClassLoader *) imageTableNextDo(getClassLoaderTable());
 	}
 }
@@ -410,9 +399,6 @@ JVMImage::fixupClasses(void)
 		if (NULL == currentClass->lastITable) {
 			currentClass->lastITable = JVMImage::getInvalidITable();
 		}
-
-		J9UTF8 *className = J9ROMCLASS_CLASSNAME(romClass);
-		Trc_VM_ImageClassFixup(currentClass, J9UTF8_DATA(className));
 
 		currentClass = (J9Class *) imageTableNextDo(getClassTable());
 	}
@@ -517,8 +503,6 @@ JVMImage::fixupClassPathEntries(void)
 	while (NULL != currentCPEntry) {
 		currentCPEntry->type = CPE_TYPE_UNKNOWN;
 		currentCPEntry->status = 0;
-
-		Trc_VM_ImageCPEntryFixup(currentCPEntry, currentCPEntry->path);
 
 		currentCPEntry = (J9ClassPathEntry *) imageTableNextDo(getClassPathEntryTable());
 	}
@@ -640,6 +624,8 @@ registerClassLoader(J9JavaVM *javaVM, J9ClassLoader *classLoader, uint32_t class
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 	Assert_VM_notNull(jvmImage);
 
+	Trc_VM_ImageClassLoaderRegister(classLoader, classLoaderCategory);
+
 	jvmImage->registerEntryInTable(jvmImage->getClassLoaderTable(), (UDATA)classLoader);
 	/* TODO: Currently only three class loaders are stored */
 	jvmImage->setClassLoader(classLoader, classLoaderCategory);
@@ -651,6 +637,11 @@ registerClass(J9JavaVM *javaVM, J9Class *clazz)
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 	Assert_VM_notNull(jvmImage);
 
+	J9ROMClass *romClass = clazz->romClass;
+
+	J9UTF8 *className = J9ROMCLASS_CLASSNAME(romClass);
+	Trc_VM_ImageClassRegister(clazz, J9UTF8_DATA(className));
+
 	jvmImage->registerEntryInTable(jvmImage->getClassTable(), (UDATA)clazz);
 }
 
@@ -659,6 +650,8 @@ registerCPEntry(J9JavaVM *javaVM, J9ClassPathEntry *cpEntry)
 {
 	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
 	Assert_VM_notNull(jvmImage);
+
+	Trc_VM_ImageCPEntryRegister(cpEntry, cpEntry->path);
 	
 	jvmImage->registerEntryInTable(jvmImage->getClassPathEntryTable(), (UDATA)cpEntry);
 }
