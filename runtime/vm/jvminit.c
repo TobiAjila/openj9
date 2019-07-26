@@ -1776,7 +1776,7 @@ IDATA VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved) {
 				if (ramStateIndex >= 0) {
 					GET_OPTION_VALUE(ramStateIndex, '=', &optionValue);
 					/* Check whether it is a cold or warm run by checking if the cache already exists */
-					if (access(optionValue, F_OK) != -1) {
+					if (-1 != access(optionValue, F_OK)) {
 						vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN;
 					} else {
 						vm->extendedRuntimeFlags2 |= J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN;
