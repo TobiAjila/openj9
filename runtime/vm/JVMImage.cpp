@@ -736,13 +736,19 @@ initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLoader, J9C
 			setHeapOutOfMemoryError(vmThread);
 			return NULL;
 		}
-		J9VMJAVALANGJ9VMINTERNALSCLASSINITIALIZATIONLOCK_SET_THECLASS(vmThread, lockObject, classObject);
-		J9VMJAVALANGCLASS_SET_INITIALIZATIONLOCK(vmThread, classObject, lockObject);
+		J9VMJAVALANGJ9VMINTERNALSCLASSINITIALIZATIONLOCK_SET_THECLASS(vmThread, lockObject, (j9object_t) classObject);
+		J9VMJAVALANGCLASS_SET_INITIALIZATIONLOCK(vmThread, (j9object_t) classObject, lockObject);
 	}
 
 	J9VMJAVALANGCLASS_SET_CLASSLOADER(vmThread, classObject, classLoader->classLoaderObject);
 	J9VMJAVALANGCLASS_SET_VMREF(vmThread, classObject, clazz);
 	J9STATIC_OBJECT_STORE(vmThread, clazz, (j9object_t*)&clazz->classObject, (j9object_t)classObject);
+
+	VM_AtomicSupport::writeBarrier();
+
+	if (J9ROMCLASS_IS_ARRAY(clazz->romClass)) {
+		javaVM->memoryManagerFunctions->j9gc_objaccess_postStoreClassToClassLoader(vmThread, classLoader, clazz);
+	}
 
 	return clazz;
 }
