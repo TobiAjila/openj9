@@ -379,4 +379,6 @@ J9InternalVMFunctions J9InternalFunctions = {
 	findClassLoader,
 	initializeImageClassLoaderObject,
 	initializeImageClassObject,
+	getImageClassMemorySegmentList,
+	registerClassMemorySegmentList,
 };

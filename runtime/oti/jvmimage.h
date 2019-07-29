@@ -79,6 +79,7 @@ typedef struct JVMImageHeader {
 	J9WSRP classLoaderTable;
 	J9WSRP classTable;
 	J9WSRP classPathEntryTable;
+	J9WSRP classMemorySegmentList;
 	J9WSRP cInitialStaticMethod;
 	J9WSRP cInitialSpecialMethod;
 	J9WSRP cInitialVirtualMethod;

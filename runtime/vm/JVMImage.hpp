@@ -113,6 +113,10 @@ public:
 	ImageTableHeader* getClassTable(void) { return WSRP_GET(_jvmImageHeader->classTable, ImageTableHeader*); }
 	ImageTableHeader* getClassPathEntryTable(void) { return WSRP_GET(_jvmImageHeader->classPathEntryTable, ImageTableHeader*); }
 
+	/* Accessor/Mutators for class memory segments */
+	J9MemorySegmentList* getClassMemorySegmentList(void) { return WSRP_GET(_jvmImageHeader->classMemorySegmentList, J9MemorySegmentList*); }
+	void setClassMemorySegmentList(J9MemorySegmentList *classSegments) { WSRP_SET(_jvmImageHeader->classMemorySegmentList, classSegments); }
+
 	/* VM Initial Methods accessors/mutators */
 	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod);
 	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod);

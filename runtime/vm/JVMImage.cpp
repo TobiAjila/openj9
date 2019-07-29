@@ -755,6 +755,24 @@ initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLoader, J9C
 	return clazz;
 }
 
+extern "C" J9MemorySegmentList*
+getImageClassMemorySegmentList(J9JavaVM* javaVM)
+{
+	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
+	Assert_VM_notNull(jvmImage);
+
+	return jvmImage->getClassMemorySegmentList();
+}
+
+extern "C" void
+registerClassMemorySegmentList(J9JavaVM* javaVM, J9MemorySegmentList* classSegments)
+{
+	IMAGE_ACCESS_FROM_JAVAVM(javaVM);
+	Assert_VM_notNull(jvmImage);
+
+	return jvmImage->setClassMemorySegmentList(classSegments);
+}
+
 extern "C" void
 shutdownJVMImage(J9JavaVM *javaVM)
 {

@@ -4790,6 +4790,8 @@ typedef struct J9InternalVMFunctions {
 	J9ClassLoader* ( *findClassLoader)(struct J9JavaVM *javaVM, uint32_t classLoaderCategory);
 	void ( *initializeImageClassLoaderObject)(struct J9JavaVM *javaVM, struct J9ClassLoader *classLoader, j9object_t classLoaderObject);
 	struct J9Class* ( *initializeImageClassObject)(struct J9VMThread *vmThread, struct J9ClassLoader *classLoader, struct J9Class *clazz);
+	struct J9MemorySegmentList* ( *getImageClassMemorySegmentList)(struct J9JavaVM *javaVM);
+	void ( *registerClassMemorySegmentList)(struct J9JavaVM *javaVM, struct J9MemorySegmentList *classSegments);
 } J9InternalVMFunctions;
 
 /* Jazz 99339: define a new structure to replace JavaVM so as to pass J9NativeLibrary to JVMTIEnv  */

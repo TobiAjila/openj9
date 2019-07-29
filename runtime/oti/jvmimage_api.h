@@ -161,6 +161,9 @@ J9Class* initializeImageClassObject(J9VMThread *vmThread, J9ClassLoader *classLo
 */
 void initializeImageClassLoaderObject(J9JavaVM *javaVM, J9ClassLoader *classLoader, j9object_t classLoaderObject);
 
+J9MemorySegmentList* getImageClassMemorySegmentList(J9JavaVM* javaVM);
+void registerClassMemorySegmentList(J9JavaVM* javaVM, J9MemorySegmentList* classSegments);
+
 /*
 * Shut down sequence of JVMImage
 * Frees memory of heap variables and jvmimage instance
