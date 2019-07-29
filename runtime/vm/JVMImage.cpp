@@ -640,7 +640,7 @@ registerClass(J9JavaVM *javaVM, J9Class *clazz)
 	J9ROMClass *romClass = clazz->romClass;
 
 	J9UTF8 *className = J9ROMCLASS_CLASSNAME(romClass);
-	Trc_VM_ImageClassRegister(clazz, J9UTF8_DATA(className));
+	Trc_VM_ImageClassRegister(javaVM->mainThread, clazz, J9UTF8_DATA(className));
 
 	jvmImage->registerEntryInTable(jvmImage->getClassTable(), (UDATA)clazz);
 }
