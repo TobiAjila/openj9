@@ -521,12 +521,12 @@ gcInitializeHeapStructures(J9JavaVM *vm)
 	}
 
 	/* For now, number of segments to default in pool */
-	if (J9_ARE_ALL_BITS_SET(javaVM->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)) {
+	if (J9_ARE_ALL_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_WARM_RUN)) {
 		vm->classMemorySegments = vm->internalVMFunctions->getImageClassMemorySegmentList(vm);
 	} else if ((vm->classMemorySegments = vm->internalVMFunctions->allocateMemorySegmentListWithFlags(vm, 10, MEMORY_SEGMENT_LIST_FLAG_SORT, J9MEM_CATEGORY_CLASSES)) == NULL) {
 		loadInfo->fatalErrorStr = (char *)j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_GC_FAILED_TO_ALLOCATE_VM_CLASS_MEMORY_SEGMENTS, "Failed to allocate VM class memory segments.");
 		goto error;
-	} else if (J9_ARE_ALL_BITS_SET(javaVM->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN)) {
+	} else if (J9_ARE_ALL_BITS_SET(vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_RAMSTATE_COLD_RUN)) {
 		vm->internalVMFunctions->registerClassMemorySegmentList(vm, vm->classMemorySegments);
 	}
 
