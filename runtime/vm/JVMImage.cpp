@@ -21,6 +21,7 @@
  *******************************************************************************/
 
 #include "JVMImage.hpp"
+#include "VMHelpers.hpp"
 
 #include <sys/mman.h>
 
